@@ -1,5 +1,6 @@
-# CS4347_ASC_BaselineModel
-This repo is dedicated to CS4347 Group Project on Acoustic Scene Classification. The goal of acoustic scene classification is to classify a test recording into one of the provided predefined classes that characterizes the environment in which it was recorded.
+# CS4347 Acoustic Scene Classification
+
+This project is referenced from [CS4347_ASC_BaselineModel](https://github.com/ssrp/CS4347_ASC_GroupProject). The goal of acoustic scene classification is to classify a test recording into one of the provided predefined classes that characterizes the environment in which it was recorded.
 
 ## Dataset
 
