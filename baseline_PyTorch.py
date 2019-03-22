@@ -5,7 +5,6 @@ import argparse
 import os
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 # Ignore warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -59,12 +58,17 @@ class DCASEDataset(Dataset):
 		label_indices = []
 		with open(csv_file, 'r') as f:
 			content = f.readlines()
+			content = content[2:]
+			flag = 0
 			for x in content:
-				row = x.split(',')
-				data_list.append(row[0]) # first column in the csv, file names
-				label_list.append(row[1]) # second column, the labels
-				label_indices.append(row[2]) # third column, the label indices (not used in this code)
-
+				if flag == 0:
+					row = x.split(',')
+					data_list.append(row[0]) # first column in the csv, file names
+					label_list.append(row[1]) # second column, the labels
+					label_indices.append(row[2]) # third column, the label indices (not used in this code)
+					flag = 1
+				else:
+					flag = 0
 		self.root_dir = root_dir
 		self.transform = transform
 		self.datalist = data_list
@@ -77,7 +81,7 @@ class DCASEDataset(Dataset):
 	def __getitem__(self, idx):
 		wav_name = os.path.join(self.root_dir,
 								self.datalist[idx])
-		
+
 		# load the wav file with 22.05 KHz Sampling rate and only one channel
 		audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
 		
@@ -202,7 +206,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
 				epoch, batch_idx * len(data), len(train_loader.dataset),
 				100. * batch_idx / len(train_loader), loss.item()))
 
-def test(args, model, device, test_loader):
+def test(args, model, device, test_loader, data_type):
 
 	# evaluate the model
 	model.eval()
@@ -239,11 +243,11 @@ def test(args, model, device, test_loader):
 	test_loss /= len(test_loader.dataset)
 
 	# print the results
-	print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+	print('Model prediction on ' + data_type + ': Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
 		test_loss, correct, len(test_loader.dataset),
 		100. * correct / len(test_loader.dataset)))
 
-def NormalizeData(train_labels_dir, root_dir)
+def NormalizeData(train_labels_dir, root_dir):
 	# load the dataset
 	dcase_dataset = DCASEDataset(csv_file=train_labels_dir, root_dir=root_dir)
 
@@ -260,26 +264,24 @@ def NormalizeData(train_labels_dir, root_dir)
 	for i in range(len(dcase_dataset)):
 
 			# extract the sample
-	        sample = dcase_dataset[rand[i]]
-	        data, label = sample
-	        # print because we like to see it working
-	        print('NORMALIZATION (FEATURE SCALING) : ' + str(i) + ' - data shape: ' + data.shape + ', label: ' + label + ', current accumulation size: ' melConcat.shape)
-	        if flag == 0:
-	        		# get the data and init melConcat for the first time
-	                melConcat = data
-	                flag = 1
-	        else:
-	        		# concatenate spectrograms from second iteration
-	                melConcat = np.concatenate((melConcat, data), axis = 1)
-    # extract std and mean
-    std = np.std(melConcat, axis=1)
-    mean = np.mean(melConcat, axis=1)
+		sample = dcase_dataset[rand[i]]
+		data, label = sample
+		# print because we like to see it working
+		print('NORMALIZATION (FEATURE SCALING) : ' + str(i) + ' - data shape: ' + str(data.shape) + ', label: ' + str(label) + ', current accumulation size: ' + str(melConcat.shape))
+		if flag == 0:
+				# get the data and init melConcat for the first time
+			melConcat = data
+			flag = 1
+		else:
+				# concatenate spectrograms from second iteration
+			melConcat = np.concatenate((melConcat, data), axis = 2)
+	# extract std and mean
+	std = np.std(melConcat, axis=2)
+	mean = np.mean(melConcat, axis=2)
 
-    # save the files, so that you don't have to calculate this again. NOTE that we need to calculate again if we change the training data
-    np.save('mean_final.npy', mean)
-    np.save('std_final.npy', std)
-
-    return mean, std
+	# save the files, so that you don't have to calculate this again. NOTE that we need to calculate again if we change the training data
+	
+	return mean, std
 
 def main():
 	# Training settings
@@ -308,15 +310,23 @@ def main():
 	device = torch.device("cuda" if use_cuda else "cpu")
 
 	# init the train and test directories
-	train_labels_dir = 'train/train_labels.csv'
-	test_labels_dir = 'test/test_labels.csv'
-	root_dir = ''
+	train_labels_dir = '../Dataset/train/train_labels.csv'
+	test_labels_dir = '../Dataset/test/test_labels.csv'
+	train_data_dir = '../Dataset/train/'
+	test_data_dir = '../Dataset/test/'
 
-	mean, std = NormalizeData(train_labels_dir, root_dir)
 
-	# get the mean and std. If Normalized already, just load the npy files and comment the NormalizeData() function above
-	# mean = np.load('mean_final.npy')
-	# std = np.load('std_final.npy')
+	if os.path.isfile('norm_mean.npy') and os.path.isfile('norm_std.npy'):
+		# get the mean and std. If Normalized already, just load the npy files and comment the NormalizeData() function above
+		mean = np.load('norm_mean.npy')
+		std = np.load('norm_std.npy')
+	else:
+		# If not, run the normalization and save the mean/std
+		print('DATA NORMALIZATION : ACCUMULATING THE DATA')
+		mean, std = NormalizeData(train_labels_dir, train_data_dir)
+		np.save('norm_mean.npy', std)
+		np.save('norm_std.npy', mean)
+		print('DATA NORMALIZATION COMPLETED')
 
 	# Convert to Torch Tensors
 	mean = torch.from_numpy(mean)
@@ -333,9 +343,9 @@ def main():
 
 	# init the datasets
 	dcase_dataset = DCASEDataset(csv_file=train_labels_dir,
-								root_dir=root_dir, transform=data_transform)
+								root_dir=train_data_dir, transform=data_transform)
 	dcase_dataset_test = DCASEDataset(csv_file=test_labels_dir,
-								root_dir=root_dir, transform=data_transform)
+								root_dir=test_data_dir, transform=data_transform)
 
 	# set number of cpu workers in parallel
 	kwargs = {'num_workers': 16, 'pin_memory': True} if use_cuda else {}
@@ -346,7 +356,7 @@ def main():
 			batch_size=args.batch_size, shuffle=True, **kwargs)
 
 	test_loader = torch.utils.data.DataLoader(dcase_dataset_test,
-			batch_size=args.test_batch_size, shuffle=True, **kwargs)
+			batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 	# init the model
 	model = BaselineASC().to(device)
@@ -354,11 +364,14 @@ def main():
 	# init the optimizer
 	optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+	print('MODEL TRAINING START')
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		train(args, model, device, train_loader, optimizer, epoch)
-		test(args, model, device, test_loader)
+		test(args, model, device, train_loader, 'Training Data')
+		test(args, model, device, test_loader, 'Testing Data')
 
+	print('MODEL TRAINING END')
 	# save the model
 	if (args.save_model):
 		torch.save(model.state_dict(),"BaselineASC.pt")
