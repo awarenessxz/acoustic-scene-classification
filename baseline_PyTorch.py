@@ -26,24 +26,25 @@ from dataset import DataSetMixer, DCASEDataset
 '''
 
 # Use datasetManager if we want to control % of dataset to use, split train/test on our own, or when we do not have all audio files in audio directory
-combine_dataset = True 			
+combine_dataset = False 			
 dataset_percentage = 0.025
 dataset_training_ratio = 0.7
 under_sampling = False
 data_augumentation = False
 
 # Set the parameters below depending on the features to be extracted
-recompute_preprocessed_data = True 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
+recompute_preprocessed_data = False 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
 num_of_channel = 1
 feature_index = 0									# determine which feature to extract
 train_preprocessed_audios = "mono_spec_train.npy"	
 test_preprocessed_audios = "mono_spec_test.npy"
+preprocessed_norm_mean_file = "mono_spec_norm_mean.npy"
+preprocessed_norm_std_file = "mono_spec_norm_std.npy"
+saved_model = "f0_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
-preprocessed_norm_mean_file = "norm_mean.npy"
-preprocessed_norm_std_file = "norm_std.npy"
 
 
 '''
@@ -133,11 +134,11 @@ def main():
 	# Step 1a: Preparing Data - Extract data ###########################################################
 
 	# init the train and test directories
-	train_labels_dir = 'Dataset/train/train_labels.csv'
-	test_labels_dir = 'Dataset/test/test_labels.csv'
-	train_data_dir = 'Dataset/train/'
-	test_data_dir = 'Dataset/test/'
-	root_dir = 'Dataset'
+	train_labels_dir = '../Dataset/train/train_labels.csv'
+	test_labels_dir = '../Dataset/test/test_labels.csv'
+	train_data_dir = '../Dataset/train/'
+	test_data_dir = '../Dataset/test/'
+	root_dir = '../Dataset'
 
 	# combine train and test data
 	if combine_dataset:
@@ -233,7 +234,7 @@ def main():
 
 	# save the model
 	if (args.save_model):
-		torch.save(model.state_dict(),"BaselineASC.pt")
+		torch.save(model.state_dict(), saved_model)
 
 		
 if __name__ == '__main__':

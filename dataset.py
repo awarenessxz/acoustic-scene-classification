@@ -66,7 +66,7 @@ class DCASEDataset(Dataset):
 								self.datalist[idx])
 
 		# Check if audio file have been preprocessed
-		if self.preprocessed_audios:
+		if self.preprocessed_audios.size != 0:
 			input_feat = self.preprocessed_audios[idx]
 		else:
 			# Extract the input Feature
@@ -116,6 +116,10 @@ class DCASEDataset(Dataset):
 				mel_specs.append(ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name))
 
 		np.save(filename, mel_specs)
+
+		mel_specs = np.asarray(mel_specs)
+
+		return mel_specs
 
 class DataSetMixer():
 
