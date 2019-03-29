@@ -98,7 +98,7 @@ class DCASEDataset(Dataset):
 			filename (string): output name of file
 		"""
 
-		print("Preprocessing Audio Files and saved as %s..." % filename)
+		print("Preprocessing %i Audio Files for Feature %i and saved as %s..." % (len(self.datalist), self.feature_index, filename))
 
 		mel_specs = []
 
@@ -108,6 +108,12 @@ class DCASEDataset(Dataset):
 
 			if self.feature_index == 0:
 				mel_specs.append(ap.extract_mel_spectrogram_for_mono_channel(wav_name))
+			elif self.feature_index == 1:
+				mel_specs.append(ap.extract_mel_spectrogram_for_left_channel(wav_name))
+			elif self.feature_index == 2:
+				mel_specs.append(ap.extract_mel_spectrogram_for_right_channel(wav_name))
+			elif self.feature_index == 3:
+				mel_specs.append(ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name))
 
 		np.save(filename, mel_specs)
 
