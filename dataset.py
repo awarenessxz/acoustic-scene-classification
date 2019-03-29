@@ -17,7 +17,7 @@ import audiopro as ap
 
 class DCASEDataset(Dataset):
 
-	def __init__(self, csv_file, root_dir, feature_index=0, transform=None):
+	def __init__(self, csv_file, root_dir, feature_index, preprocessed_file="", transform=None):
 		"""
 		Args:
 			csv_file (string): Path to the csv file with annotations.
@@ -50,6 +50,14 @@ class DCASEDataset(Dataset):
 
 		self.feature_index = feature_index		# determine which input feature to use
 
+		# Load Preprocess audio spectrogram features
+		self.preprocessed_audios = []
+		if preprocessed_file:	# string is not empty
+			if os.path.isfile(preprocessed_file):
+				self.preprocessed_audios = np.load(preprocessed_file)
+			else:
+				self.preprocessed_audios = self.preprocess_audio_files(preprocessed_file)
+
 	def __len__(self):
 		return len(self.datalist)
 
@@ -57,9 +65,19 @@ class DCASEDataset(Dataset):
 		wav_name = os.path.join(self.root_dir,
 								self.datalist[idx])
 
-		# Extract the input Feature
-		if self.feature_index == 0:
-			input_feat = ap.extract_mel_spectrogram_for_mono_channel(wav_name)
+		# Check if audio file have been preprocessed
+		if self.preprocessed_audios:
+			input_feat = self.preprocessed_audios[idx]
+		else:
+			# Extract the input Feature
+			if self.feature_index == 0:
+				input_feat = ap.extract_mel_spectrogram_for_mono_channel(wav_name)
+			elif self.feature_index == 1:
+				input_feat = ap.extract_mel_spectrogram_for_left_channel(wav_name)
+			elif self.feature_index == 2:
+				input_feat = ap.extract_mel_spectrogram_for_right_channel(wav_name)
+			elif self.feature_index == 3:
+				input_feat = ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name)
 
 		# extract the label
 		label = np.asarray(self.default_labels.index(self.labels[idx]))
@@ -70,10 +88,28 @@ class DCASEDataset(Dataset):
 		# perform the transformation (normalization etc.), if required
 		if self.transform:
 			sample = self.transform(sample)
-		
-		print(sample[0].shape)
 
 		return sample
+
+	def preprocess_audio_files(self, filename):
+		"""
+			Preprocess audio files to extract the spectrogram of feature and save
+
+			filename (string): output name of file
+		"""
+
+		print("Preprocessing Audio Files and saved as %s..." % filename)
+
+		mel_specs = []
+
+		# extract spectrogram of feature
+		for i in range(len(self.datalist)):
+			wav_name = os.path.join(self.root_dir, self.datalist[i])
+
+			if self.feature_index == 0:
+				mel_specs.append(ap.extract_mel_spectrogram_for_mono_channel(wav_name))
+
+		np.save(filename, mel_specs)
 
 class DataSetMixer():
 
@@ -82,7 +118,6 @@ class DataSetMixer():
 			train_csv_file (string): Path to DCASE train labels csv file with annotations.
 			test_csv_file (string): Path to DCASE test labels csv file with annotations.
 			root_dir (string): Directory with all the audio files.
-			percentage (float): percentage of data to use. Range => [0.0 - 1.0]
 		"""
 		self.train_csv_filepath = train_csv_file
 		self.test_csv_filepath = test_csv_file

@@ -32,8 +32,19 @@ dataset_training_ratio = 0.7
 under_sampling = False
 data_augumentation = False
 
+# Set the parameters below depending on the features to be extracted
+recompute_preprocessed_data = True 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
 num_of_channel = 1
-feature_index = 0			# determine which feature to extract
+feature_index = 0									# determine which feature to extract
+train_preprocessed_audios = "mono_spec_train.npy"	
+test_preprocessed_audios = "mono_spec_test.npy"
+	# 0 = mono spectrogram (1 channel) 
+	# 1 = left spectrogram (1 channel) 
+	# 2 = right spectrogram (1 channel)
+	# 3 = left & right spectrogram (2 channel)
+preprocessed_norm_mean_file = "norm_mean.npy"
+preprocessed_norm_std_file = "norm_std.npy"
+
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +54,8 @@ feature_index = 0			# determine which feature to extract
 
 def NormalizeData(train_labels_dir, root_dir):
 	# load the dataset
-	dcase_dataset = DCASEDataset(csv_file=train_labels_dir, root_dir=root_dir)
+	dcase_dataset = DCASEDataset(csv_file=train_labels_dir, root_dir=root_dir, 
+		feature_index=feature_index, preprocessed_file=train_preprocessed_audios)
 
 	# concatenate the mel spectrograms in time-dimension, this variable accumulates the spectrograms
 	melConcat = np.asarray([])
@@ -57,7 +69,7 @@ def NormalizeData(train_labels_dir, root_dir):
 	# for all the training samples
 	for i in range(len(dcase_dataset)):
 
-			# extract the sample
+		# extract the sample
 		sample = dcase_dataset[rand[i]]
 		data, label = sample
 		# print because we like to see it working
@@ -107,6 +119,16 @@ def main():
 
 	device = torch.device("cuda" if use_cuda else "cpu")
 
+	# Recompute all preproessed data (due to changes in parameters)
+	if recompute_preprocessed_data:
+		if os.path.isfile(train_preprocessed_audios):
+			os.remove(train_preprocessed_audios)
+		if os.path.isfile(test_preprocessed_audios):
+			os.remove(test_preprocessed_audios)
+		if os.path.isfile(preprocessed_norm_mean_file):
+			os.remove(preprocessed_norm_mean_file)
+		if os.path.isfile(preprocessed_norm_std_file):
+			os.remove(preprocessed_norm_std_file)
 
 	# Step 1a: Preparing Data - Extract data ###########################################################
 
@@ -135,16 +157,16 @@ def main():
 	# Step 1b: Preparing Data - Transform Data #########################################################
 
 	# Compute Normalization score
-	if os.path.isfile('norm_mean.npy') and os.path.isfile('norm_std.npy'):
+	if os.path.isfile(preprocessed_norm_mean_file) and os.path.isfile(preprocessed_norm_std_file):
 		# get the mean and std. If Normalized already, just load the npy files and comment the NormalizeData() function above
-		mean = np.load('norm_mean.npy')
-		std = np.load('norm_std.npy')
+		mean = np.load(preprocessed_norm_mean_file)
+		std = np.load(preprocessed_norm_std_file)
 	else:
 		# If not, run the normalization and save the mean/std
 		print('DATA NORMALIZATION : ACCUMULATING THE DATA')
 		mean, std = NormalizeData(train_labels_dir, train_data_dir)
-		np.save('norm_mean.npy', std)
-		np.save('norm_std.npy', mean)
+		np.save(preprocessed_norm_mean_file, mean)
+		np.save(preprocessed_norm_std_file, std)
 		print('DATA NORMALIZATION COMPLETED')
 
 	# Convert to Torch Tensors
@@ -152,8 +174,8 @@ def main():
 	std = torch.from_numpy(std)				
 
 	# convert to torch variables
-	mean = torch.reshape(mean, [40, num_of_channel])		# depends on number of channel in input
-	std = torch.reshape(std, [40, num_of_channel])			# depends on number of channel in input
+	mean = torch.reshape(mean, [num_of_channel, 40, 1])		# numpy broadcast (CxHxW). last dimension is 1 -> which will be automatically broadcasted to 500 (time)
+	std = torch.reshape(std, [num_of_channel, 40, 1])	
 
 	# init the data_transform
 	data_transform = transforms.Compose([
@@ -162,9 +184,11 @@ def main():
 
 	# init the datasets
 	dcase_dataset = DCASEDataset(csv_file=train_labels_dir,
-								root_dir=train_data_dir, feature_index=feature_index, transform=data_transform)
+								root_dir=train_data_dir, feature_index=feature_index, 
+								preprocessed_file=train_preprocessed_audios, transform=data_transform)
 	dcase_dataset_test = DCASEDataset(csv_file=test_labels_dir,
-								root_dir=test_data_dir, feature_index=feature_index, transform=data_transform)
+								root_dir=test_data_dir, feature_index=feature_index, 
+								preprocessed_file=test_preprocessed_audios, transform=data_transform)
 
 
 	# Step 1c: Preparing Data - Load Data ###############################################################
