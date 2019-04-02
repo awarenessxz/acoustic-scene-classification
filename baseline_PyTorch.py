@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 import cnnmodel as cnn
 from cnnmodel import BaselineASC
 from dataset import DataSetMixer, DCASEDataset
+from utility import StopWatch
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +27,7 @@ from dataset import DataSetMixer, DCASEDataset
 '''
 
 # Use datasetManager if we want to control % of dataset to use, split train/test on our own, or when we do not have all audio files in audio directory
-combine_dataset = False 			
+combine_dataset = True 			
 dataset_percentage = 0.025
 dataset_training_ratio = 0.7
 under_sampling = False
@@ -34,8 +35,8 @@ data_augumentation = False
 
 # Set the parameters below depending on the features to be extracted
 recompute_preprocessed_data = False 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
-num_of_channel = 3
-feature_index = 5									# determine which feature to extract
+num_of_channel = 0
+feature_index = 1									# determine which feature to extract
 train_preprocessed_audios = "3f_spec_train.npy"	
 test_preprocessed_audios = "3f_spec_test.npy"
 preprocessed_norm_mean_file = "3f_spec_norm_mean.npy"
@@ -94,6 +95,11 @@ def NormalizeData(train_labels_dir, root_dir):
 
 
 def main():
+
+	# Initialize Timer
+	timer = StopWatch()
+	timer.startTimer()
+
 	# Step 0: Setting up Training Settings ##################################################
 
 
@@ -238,6 +244,10 @@ def main():
 	if (args.save_model):
 		torch.save(model.state_dict(), saved_model)
 
+	# stop timer
+	timer.stopTimer()
+	timer.printElapsedTime()
+	
 		
 if __name__ == '__main__':
 	# create a separate main function because original main function is too mainstream
