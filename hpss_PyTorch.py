@@ -15,6 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
+import Preprocessing
 
 import cnnmodel as cnn
 from cnnmodel import BaselineASC
@@ -195,7 +196,7 @@ def main():
         save_test_spec = True
     else:
         print("Preprocessing First!")
-        exit(-1)
+        Preprocessing()
 
     # Convert to Torch Tensors
     mean = torch.from_numpy(mean)
