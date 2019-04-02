@@ -284,7 +284,7 @@ def SaveTestHPSS(test_labels_dir, root_dir):
     np.save('hpss_test_spec.npy', melspec)
 
 
-def main():
+class Preprocessing():
     # init the train and test directories
     train_labels_dir = '../Dataset/train/train_labels.csv'
     test_labels_dir = '../Dataset/test/test_labels.csv'
@@ -310,7 +310,4 @@ def main():
     if os.path.isfile('hpss_test_spec.npy') == False:
         SaveTestHPSS(test_labels_dir,root_dir=test_data_dir)
 
-
-if __name__ == '__main__':
-    # create a separate main function because original main function is too mainstream
-    main()
+    print("Preprocessing Done.")
