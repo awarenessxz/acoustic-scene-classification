@@ -20,7 +20,6 @@ from torch.utils.data import Dataset, DataLoader
 # import Librosa, tool for extracting features from audio data
 import librosa
 
-
 # Creates a Tensor from the Numpy dataset, which is used by the GPU for processing
 class ToTensor(object):
 
@@ -48,7 +47,7 @@ class Normalize(object):
 
 class DCASEDataset(Dataset):
 
-    def __init__(self, csv_file, root_dir, transform=None,save_train_spec=False,save_test_spec=False):
+    def __init__(self, csv_file, root_dir, transform=None,feature_index=0):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -79,8 +78,7 @@ class DCASEDataset(Dataset):
         self.labels = label_list
         self.default_labels = ['airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall',
                                'street_pedestrian', 'street_traffic', 'tram']
-        self.save_train_spec=save_train_spec
-        self.save_test_spec = save_test_spec
+        self.feature_index = feature_index
 
     def __len__(self):
         return len(self.datalist)
@@ -88,37 +86,30 @@ class DCASEDataset(Dataset):
     def __getitem__(self, idx):
         wav_name = os.path.join(self.root_dir,
                                 self.datalist[idx])
-        # load the wav file with 22.05 KHz Sampling rate and only one channel
-        audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
         # extract the label
         label = np.asarray(self.default_labels.index(self.labels[idx]))
 
-        if self.save_train_spec==True:
-            spec = np.load('mel_train_spec.npy')[idx]
-            sample = (spec,label)
-        if self.save_test_spec==True:
-            spec = np.load('mel_test_spec.npy')[idx]
-            sample = (spec, label)
-        else:
-            # extract mel-spectrograms, number of mel-bins=40
-            spec = librosa.feature.melspectrogram(y=audio,
-                                                  sr=sr,  # mention the same sampling rate
-                                                  n_fft=883,  # Number of FFT bins (Window-size: 0.04s)
-                                                  hop_length=441,  # Hop size (50% overlap)
-                                                  n_mels=40)  # Number of mel-bins in the output spectrogram
+        # load the wav file with 22.05 KHz Sampling rate and only one channel
+        audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
+        # extract mel-spectrograms, number of mel-bins=40
+        spec = librosa.feature.melspectrogram(y=audio,
+                                              sr=sr,  # mention the same sampling rate
+                                              n_fft=883,  # Number of FFT bins (Window-size: 0.04s)
+                                              hop_length=441,  # Hop size (50% overlap)
+                                              n_mels=40)  # Number of mel-bins in the output spectrogram
 
-            # perform the logarithm transform, which makes the spectrograms look better, visually (hence better for the CNNs to extract features)
-            logmel = librosa.core.amplitude_to_db(spec)
+        # perform the logarithm transform, which makes the spectrograms look better, visually (hence better for the CNNs to extract features)
+        logmel = librosa.core.amplitude_to_db(spec)
 
-            # add an extra column for the audio channel
-            logmel = np.reshape(logmel, [1, logmel.shape[0], logmel.shape[1]])
+        # add an extra column for the audio channel
+        logmel = np.reshape(logmel, [1, logmel.shape[0], logmel.shape[1]])
 
-            # final sample
-            sample = (logmel, label)
+        # final sample
+        sample = (logmel, label)
 
-            # perform the transformation (normalization etc.), if required
-            if self.transform:
-                sample = self.transform(sample)
+        # perform the transformation (normalization etc.), if required
+        if self.transform:
+            sample = self.transform(sample)
 
         return sample
 
@@ -200,43 +191,33 @@ class DCASEDatasetHPSS(Dataset):
     def __getitem__(self, idx):
         wav_name = os.path.join(self.root_dir,
                                 self.datalist[idx])
-        # load the wav file with 22.05 KHz Sampling rate and only one channel
-        audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
         # extract the label
         label = np.asarray(self.default_labels.index(self.labels[idx]))
 
-        if self.save_train_spec==True:
-            spec = np.load('hpss_train_spec.npy')[idx]
-            sample = (spec,label)
-        if self.save_test_spec==True:
-            spec = np.load('hspp_test_spec.npy')[idx]
-            sample = (spec, label)
-        else:
-            # extract mel-spectrograms, number of mel-bins=40
-            spec = librosa.feature.melspectrogram(y=audio,
-                                                  sr=sr,  # mention the same sampling rate
-                                                  n_fft=883,  # Number of FFT bins (Window-size: 0.04s)
-                                                  hop_length=441,  # Hop size (50% overlap)
-                                                  n_mels=40)  # Number of mel-bins in the output spectrogram
+        # load the wav file with 22.05 KHz Sampling rate and only one channel
+        audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
+        # extract mel-spectrograms, number of mel-bins=40
+        spec = librosa.feature.melspectrogram(y=audio,
+                                              sr=sr,  # mention the same sampling rate
+                                              n_fft=883,  # Number of FFT bins (Window-size: 0.04s)
+                                              hop_length=441,  # Hop size (50% overlap)
+                                              n_mels=40)  # Number of mel-bins in the output spectrogram
 
-            H, P = librosa.decompose.hpss(spec)
-            spech_HP = []
-            spech_HP.append(H)
-            spech_HP.append(P)
-            spech_HP = np.array(spech_HP)
+        H, P = librosa.decompose.hpss(spec)
+        spech_HP = []
+        spech_HP.append(H)
+        spech_HP.append(P)
+        spech_HP = np.array(spech_HP)
 
-            # perform the logarithm transform, which makes the spectrograms look better, visually (hence better for the CNNs to extract features)
-            logmel = librosa.core.amplitude_to_db(spech_HP)
+        # perform the logarithm transform, which makes the spectrograms look better, visually (hence better for the CNNs to extract features)
+        logmel = librosa.core.amplitude_to_db(spech_HP)
 
-            # extract the label
-            label = np.asarray(self.default_labels.index(self.labels[idx]))
+        # final sample
+        sample = (logmel, label)
 
-            # final sample
-            sample = (logmel, label)
-
-            # perform the transformation (normalization etc.), if required
-            if self.transform:
-                sample = self.transform(sample)
+        # perform the transformation (normalization etc.), if required
+        if self.transform:
+            sample = self.transform(sample)
 
         return sample
 
@@ -305,10 +286,10 @@ def SaveTestHPSS(test_labels_dir, root_dir):
 
 def main():
     # init the train and test directories
-    train_labels_dir = 'train/train_labels.csv'
-    test_labels_dir = 'test/test_labels.csv'
-    train_data_dir = 'train/'
-    test_data_dir = 'test/'
+    train_labels_dir = '../Dataset/train/train_labels.csv'
+    test_labels_dir = '../Dataset/test/test_labels.csv'
+    train_data_dir = '../Dataset/train/'
+    test_data_dir = '../Dataset/test/'
 
     if os.path.isfile('mel_train_spec.npy')==False:
         print('DATA NORMALIZATION : ACCUMULATING THE DATA')
@@ -316,6 +297,7 @@ def main():
         np.save('norm_mean.npy', std)
         np.save('norm_std.npy', mean)
         print('DATA NORMALIZATION COMPLETED')
+
     if os.path.isfile('mel_test_spec.npy') == False:
         SaveTestSpec(test_labels_dir,root_dir=test_data_dir)
 

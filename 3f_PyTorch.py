@@ -22,8 +22,8 @@ from cnnmodel import BaselineASC
 # import Librosa, tool for extracting features from audio data
 import librosa
 
-hpss_train_spec = np.array([])
-hpss_test_spec = np.array([])
+threeF_train_spec = np.array([])
+threeF_test_spec = np.array([])
 
 # Creates a Tensor from the Numpy dataset, which is used by the GPU for processing
 class ToTensor(object):
@@ -50,7 +50,7 @@ class Normalize(object):
         return data, label
 
 
-class DCASEDatasetHPSS(Dataset):
+class DCASEDataset(Dataset):
 
     def __init__(self, csv_file, root_dir, transform=None,save_train_spec=False,save_test_spec=False):
         """
@@ -90,18 +90,16 @@ class DCASEDatasetHPSS(Dataset):
         return len(self.datalist)
 
     def __getitem__(self, idx):
-        wav_name = os.path.join(self.root_dir,
-                                self.datalist[idx])
         # extract the label
         label = np.asarray(self.default_labels.index(self.labels[idx]))
 
         if self.save_train_spec==True:
-            global hpss_train_spec
-            spec = hpss_train_spec[idx]
+            global threeF_train_spec
+            spec = threeF_train_spec[idx]
             sample = (spec,label)
         elif self.save_test_spec==True:
-            global hpss_test_spec
-            spec = hpss_test_spec[idx]
+            global threeF_test_spec
+            spec = threeF_test_spec[idx]
             sample = (spec, label)
         else:
             print("Preprocessing First!")
@@ -109,42 +107,6 @@ class DCASEDatasetHPSS(Dataset):
 
         return sample
 
-
-def NormalizeDataHPSS(train_labels_dir, root_dir):
-    # load the dataset
-    dcase_dataset = DCASEDatasetHPSS(csv_file=train_labels_dir, root_dir=root_dir)
-
-    # concatenate the mel spectrograms in time-dimension, this variable accumulates the spectrograms
-    melConcat = np.asarray([])
-    melspec = []
-
-    # flag for the first element
-    flag = 0
-
-    # for all the training samples
-    for i in range(len(dcase_dataset)):
-
-        # extract the sample
-        sample = dcase_dataset[i]
-        data, label = sample
-        melspec.append(data)
-        # print because we like to see it working
-        print('NORMALIZATION (FEATURE SCALING) : ' + str(i) + ' - data shape: ' + str(data.shape) + ', label: ' + str(
-            label) + ', current accumulation size: ' + str(melConcat.shape))
-        if flag == 0:
-            # get the data and init melConcat for the first time
-            melConcat = data
-            flag = 1
-        else:
-            # concatenate spectrograms from second iteration
-            melConcat = np.concatenate((melConcat, data), axis=2)
-    # extract std and mean
-    std = np.std(melConcat, axis=2)
-    mean = np.mean(melConcat, axis=2)
-    np.save('hpss_train_spec.npy', melspec)
-    # save the files, so that you don't have to calculate this again. NOTE that we need to calculate again if we change the training data
-
-    return mean, std
 
 
 def main():
@@ -182,15 +144,16 @@ def main():
     save_train_spec = False
     save_test_spec = False
 
-    if os.path.isfile('hpss_norm_mean.npy') and os.path.isfile('hpss_norm_std.npy'):
+
+    if os.path.isfile('hpss_norm_mean.npy') and os.path.isfile('hpss_norm_std.npy') and os.path.isfile('mel_norm_mean.npy') and os.path.isfile('mel_norm_std.npy'):
         print("Preprocessing finished.")
         # get the mean and std. If Normalized already, just load the npy files and comment the NormalizeData() function above
-        mean = np.load('hpss_norm_mean.npy')
-        std = np.load('hpss_norm_std.npy')
-        global hpss_train_spec
-        global hpss_test_spec
-        hpss_train_spec = np.load('hpss_train_spec.npy')
-        hpss_test_spec = np.load('hpss_test_spec.npy')
+        mean = np.append(np.load('hpss_norm_mean.npy'),np.load('mel_norm_mean.npy'),axis=0)
+        std = np.append(np.load('hpss_norm_std.npy'),np.load('mel_norm_std.npy'),axis=0)
+        global threeF_train_spec
+        global threeF_test_spec
+        threeF_train_spec = np.append(np.load('hpss_train_spec.npy'),np.load('mel_train_spec.npy'),axis=1)
+        threeF_test_spec = np.append(np.load('hpss_test_spec.npy'), np.load('mel_test_spec.npy'), axis=1)
         save_train_spec = True
         save_test_spec = True
     else:
@@ -202,8 +165,8 @@ def main():
     std = torch.from_numpy(std)
 
     # convert to torch variables
-    mean = torch.reshape(mean, [2,40,1])
-    std = torch.reshape(std, [2,40,1])
+    mean = torch.reshape(mean, [3,40,1])
+    std = torch.reshape(std, [3,40,1])
 
     # init the data_transform
     data_transform = transforms.Compose([
@@ -211,9 +174,9 @@ def main():
     ])
 
     # init the datasets
-    dcase_dataset = DCASEDatasetHPSS(csv_file=train_labels_dir,
+    dcase_dataset = DCASEDataset(csv_file=train_labels_dir,
                                  root_dir=train_data_dir, transform=data_transform, save_train_spec=save_train_spec)
-    dcase_dataset_test = DCASEDatasetHPSS(csv_file=test_labels_dir,
+    dcase_dataset_test = DCASEDataset(csv_file=test_labels_dir,
                                       root_dir=test_data_dir, transform=data_transform, save_test_spec=save_test_spec)
 
     # set number of cpu workers in parallel
@@ -243,7 +206,7 @@ def main():
     print('MODEL TRAINING END')
     # save the model
     if (args.save_model):
-        torch.save(model.state_dict(), "f4_BaselineASC.pt")
+        torch.save(model.state_dict(), "BaselineASC.pt")
 
 
 if __name__ == '__main__':
