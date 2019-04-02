@@ -78,6 +78,10 @@ class DCASEDataset(Dataset):
 				input_feat = ap.extract_mel_spectrogram_for_right_channel(wav_name)
 			elif self.feature_index == 3:
 				input_feat = ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name)
+			elif self.feature_index == 4:
+				input_feat = ap.extract_mel_spectrogram_for_hpss(wav_name)
+			elif self.feature_index == 5:
+				input_feat = ap.extract_mel_spectrogram_for_3f(wav_name)
 
 		# extract the label
 		label = np.asarray(self.default_labels.index(self.labels[idx]))
@@ -114,6 +118,10 @@ class DCASEDataset(Dataset):
 				mel_specs.append(ap.extract_mel_spectrogram_for_right_channel(wav_name))
 			elif self.feature_index == 3:
 				mel_specs.append(ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name))
+			elif self.feature_index == 4:
+				mel_specs.append(ap.extract_mel_spectrogram_for_hpss(wav_name))
+			elif self.feature_index == 5:
+				mel_specs.append(ap.extract_mel_spectrogram_for_3f(wav_name))
 
 		np.save(filename, mel_specs)
 

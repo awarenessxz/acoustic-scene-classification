@@ -51,8 +51,33 @@ The program extracts different features from the audio file for training the cnn
 	- preprocessed_norm_std_file = "LR_spec_norm_std.npy"
 	- saved_model = "f3_BaselineASC.pt"
 
+5. Using Harmonic Percussive Source Seperation (HPSS) Log Mel Spectrogram
+	- num_of_channel = 2
+	- feature_index = 4
+	- train_preprocessed_audios = "hpss_spec_train.npy"
+	- test_preprocessed_audios = "hpss_spec_test.npy"
+	- preprocessed_norm_mean_file = "hpss_spec_norm_mean.npy"
+	- preprocessed_norm_std_file = "hpss_spec_norm_std.npy"
+	- saved_model = "f4_BaselineASC.pt"
+
+6. Using HPSS with Mono Log Mel Spectrogram (3 channels)
+	- num_of_channel = 3
+	- feature_index = 5
+	- train_preprocessed_audios = "3f_spec_train.npy"
+	- test_preprocessed_audios = "3f_spec_test.npy"
+	- preprocessed_norm_mean_file = "3f_spec_norm_mean.npy"
+	- preprocessed_norm_std_file = "3f_spec_norm_std.npy"
+	- saved_model = "f5_BaselineASC.pt"
+
 
 Run the code `python baseline_PyTorch.py`
+
+
+
+
+
+
+
 
 
 

@@ -34,17 +34,19 @@ data_augumentation = False
 
 # Set the parameters below depending on the features to be extracted
 recompute_preprocessed_data = False 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
-num_of_channel = 1
-feature_index = 0									# determine which feature to extract
-train_preprocessed_audios = "mono_spec_train.npy"	
-test_preprocessed_audios = "mono_spec_test.npy"
-preprocessed_norm_mean_file = "mono_spec_norm_mean.npy"
-preprocessed_norm_std_file = "mono_spec_norm_std.npy"
-saved_model = "f0_BaselineASC.pt"
+num_of_channel = 3
+feature_index = 5									# determine which feature to extract
+train_preprocessed_audios = "3f_spec_train.npy"	
+test_preprocessed_audios = "3f_spec_test.npy"
+preprocessed_norm_mean_file = "3f_spec_norm_mean.npy"
+preprocessed_norm_std_file = "3f_spec_norm_std.npy"
+saved_model = "f5_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
+	# 4 = hpss spectrogram (2 channel)
+	# 5 = 3f spectrogram (3 channel)
 
 
 '''
