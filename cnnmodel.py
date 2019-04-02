@@ -180,6 +180,3 @@ def test(args, model, device, test_loader, data_type):
 		test_loss, correct, len(test_loader.dataset),
 		100. * correct / len(test_loader.dataset)))
 
-
-
-
