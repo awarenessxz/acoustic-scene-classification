@@ -13,11 +13,12 @@ warnings.filterwarnings("ignore")
 import torch.optim as optim
 from torchvision import transforms, utils
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 
 # import our own tools
 import cnnmodel as cnn
 from cnnmodel import BaselineASC
-from dataset import DataSetMixer, DCASEDataset
+from dataset2 import DataSetMixer, DCASEDataset
 from utility import StopWatch
 
 '''
@@ -35,13 +36,13 @@ data_augumentation = False
 
 # Set the parameters below depending on the features to be extracted
 recompute_preprocessed_data = False 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
-num_of_channel = 0
-feature_index = 1									# determine which feature to extract
-train_preprocessed_audios = "3f_spec_train.npy"	
-test_preprocessed_audios = "3f_spec_test.npy"
-preprocessed_norm_mean_file = "3f_spec_norm_mean.npy"
-preprocessed_norm_std_file = "3f_spec_norm_std.npy"
-saved_model = "f5_BaselineASC.pt"
+num_of_channel = 1
+feature_index = 0									# determine which feature to extract
+train_preprocessed_audios = "mono_spec_train.npy"	
+test_preprocessed_audios = "mono_spec_test.npy"
+preprocessed_norm_mean_file = "mono_spec_norm_mean.npy"
+preprocessed_norm_std_file = "mono_spec_norm_std.npy"
+saved_model = "mono_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
@@ -142,11 +143,11 @@ def main():
 	# Step 1a: Preparing Data - Extract data ###########################################################
 
 	# init the train and test directories
-	train_labels_dir = '../Dataset/train/train_labels.csv'
-	test_labels_dir = '../Dataset/test/test_labels.csv'
-	train_data_dir = '../Dataset/train/'
-	test_data_dir = '../Dataset/test/'
-	root_dir = '../Dataset'
+	train_labels_dir = 'Dataset/train/train_labels.csv'
+	test_labels_dir = 'Dataset/test/test_labels.csv'
+	train_data_dir = 'Dataset/train/'
+	test_data_dir = 'Dataset/test/'
+	root_dir = 'Dataset'
 
 	# combine train and test data
 	if combine_dataset:
@@ -161,7 +162,6 @@ def main():
 		test_labels_dir = os.path.join(root_dir, test_dataset_file)
 		train_data_dir = root_dir
 		test_data_dir = root_dir
-
 
 	# Step 1b: Preparing Data - Transform Data #########################################################
 
@@ -200,6 +200,17 @@ def main():
 								preprocessed_file=test_preprocessed_audios, transform=data_transform)
 
 
+	# Split Train data into train/validate data
+	valid_ratio = 0.2
+	num_train_data = len(dcase_dataset)
+	indices = list(range(num_train_data))
+	split = int(np.floor(valid_ratio * num_train_data))
+	np.random.shuffle(indices)
+	train_idx, valid_idx = indices[split:], indices[:split]
+
+	train_sampler = SubsetRandomSampler(train_idx)
+	valid_sampler = SubsetRandomSampler(valid_idx)
+
 	# Step 1c: Preparing Data - Load Data ###############################################################
 
 
@@ -208,10 +219,10 @@ def main():
 
 	# get the training and testing data loader
 	train_loader = torch.utils.data.DataLoader(dcase_dataset,
-			batch_size=args.batch_size, shuffle=True, **kwargs)
+			batch_size=args.batch_size, sampler=train_sampler, **kwargs)
 
-	test_loader = torch.utils.data.DataLoader(dcase_dataset_test,
-			batch_size=args.test_batch_size, shuffle=False, **kwargs)
+	test_loader = torch.utils.data.DataLoader(dcase_dataset,
+			batch_size=args.test_batch_size, sampler=valid_sampler, **kwargs)
 
 
 	# Step 2: Build Model ###############################################################
@@ -231,13 +242,20 @@ def main():
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
-		cnn.test(args, model, device, train_loader, 'Training Data')
-		cnn.test(args, model, device, test_loader, 'Testing Data')
+		#cnn.validate(args, model, device, train_loader, 'Training Data')		# validate
+		#cnn.test(args, model, device, test_loader, 'Validating Data')			# validate
 
 	print('MODEL TRAINING END')
 
 
 	# Step 4: Save Model ################################################################
+
+
+	print("Model TESTING START")
+	# test the model
+	cnn.predict(model, device, test_loader)
+
+	print("Model TESTING END")
 
 
 	# save the model
