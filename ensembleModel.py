@@ -137,7 +137,7 @@ def stacking():
 							data_manager=data_manager, num_of_channel=num_of_channels[i], save_model=False)
 
 		# Fill up the train_meta with predictions results of test.csv
-		for j in data_manager.get_test_data_size():
+		for j in range(data_manager.get_test_data_size()):
 			v_idx = test[j]
 			test_meta[v_idx][i] = predictions[j]
 
