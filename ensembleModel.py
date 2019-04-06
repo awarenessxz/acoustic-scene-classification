@@ -11,6 +11,7 @@ import numpy as np
 # Import own modules
 import basemodel as bm
 from dataset import DatasetManager
+from mltoolkit import ClassifierModel, PredictionEvaluator
 from utility import StopWatch
 
 
@@ -145,10 +146,30 @@ def stacking():
 
 
 	# 5. Fit (stacking model S) to train_meta, using (M1, M2, ... Mn) as features. ############################################################
-
 	# 6. Use the stacked model S to make final predictions on test_meta ############################################################
 
+	# get the training/testing label
+	train_meta_labels = data_manager.train_label_indices
+	test_meta_labels = data_manager.test_label_indices
+
+	# Fit and Train classifier Model (step 5 & 6)
+	classifier = ClassifierModel(train_meta, train_meta_labels, test_meta)
+	predicts = classifier.run_LR_classification()
+
+	# Evaluate 
+	evaluator = PredictionEvaluator(predicts, test_meta_labels)
+	precision, recall, f1_measure = evaluator.evaluate_prediction()
+
+	print('Average Precision is %f.' % precision)
+	print('Average Recall is %f.' % recall)
+	print('Average F-Measure is %f' % f1_measure)
+
+
 	# 7. Save the ensemble model ########################################################################################################################
+
+
+
+
 
 
 def process_arguments(parser):
