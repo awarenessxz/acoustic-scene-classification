@@ -2,7 +2,12 @@
 Utility functions / Classes 
 """
 
+import datetime
 import time
+
+class Namespace:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
 class StopWatch:
 	"""
@@ -46,7 +51,8 @@ class StopWatch:
 			print("Current run time: %f. Stop watch is still running...Run 'stopTimer()' to stop the timer" % (current_time))
 		else:
 			time_taken = self.end - self.start
-			print("Total time taken: %f s" % time_taken)
+			print("Total time taken in seconds: %f s" % time_taken)
+			print("Total time taken: %s" % str(datetime.timedelta(seconds=time_taken)))
 
 
 

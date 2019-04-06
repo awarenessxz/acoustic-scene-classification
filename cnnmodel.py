@@ -3,6 +3,7 @@ CNN Model: Handles anything related to the Convolutional Neural Network
 """
 
 import torch
+import numpy as np
 
 # import PyTorch Functionalities
 import torch.nn.functional as F
@@ -147,6 +148,7 @@ def test(args, model, device, test_loader, data_type):
 	# init test loss
 	test_loss = 0
 	correct = 0
+	pred_results = np.asarray([])
 	print('Testing..')
 
 	# Use no gradient backpropagations (as we are just testing)
@@ -172,6 +174,11 @@ def test(args, model, device, test_loader, data_type):
 
 			# accumulate the correct predictions
 			correct += pred.eq(label.view_as(pred)).sum().item()
+
+			# collate the predicted results
+			pred = np.squeeze(pred.cpu().numpy())
+			pred_results = np.concatenate((pred_results, pred))
+			
 	# normalize the test loss with the number of test samples
 	test_loss /= len(test_loader.dataset)
 
@@ -179,4 +186,10 @@ def test(args, model, device, test_loader, data_type):
 	print('Model prediction on ' + data_type + ': Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
 		test_loss, correct, len(test_loader.dataset),
 		100. * correct / len(test_loader.dataset)))
+
+	return pred_results
+
+
+
+
 
