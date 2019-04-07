@@ -12,6 +12,15 @@
 
 To run the code `python ensembleModel.py`
 
+There are two modes to this program right now. Building and Predicting. 
+* Building Mode: `python ensembleModel.py --em build`
+	* apply [meta ensembling technique](http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/) to train and combine all the CNN models into one model (stacked model)
+* Predicting Mode: `python ensembleModel.py --em predict`
+	* use the saved models to predict the labels
+
+
+### Features Configuration
+
 The program extracts different features from the audio file for training the cnn model. Hence, when adding new features, update the global variables in `ensembleModel.py`. The index of the arrays corresponds to the index of the features. Refer to the information below on features available
 
 0. Using Mono Audio Log Mel Spectrogram

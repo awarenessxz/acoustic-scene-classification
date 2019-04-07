@@ -41,8 +41,9 @@ fold_norm_stds = [
 norm_means = ["mono_norm_mean.npy"]
 norm_stds = ["mono_norm_std.npy"]
 
-
+# Ensemble Model Parameters
 stacked_model_name = "stackedModel.sav"
+ensemble_mode = 0			# 0 = build, 1 = predict
 
 
 '''
@@ -51,11 +52,12 @@ stacked_model_name = "stackedModel.sav"
 ////////////////////////////////////////////////////////////////////////////////////
 '''
 
-def stacking():
+def build_stack_model():
 	"""
 		Stacking (Meta Ensembling) - Ensemble Technique to combine multiple models to generate a new model
 
 		Referenced from http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/
+		Referenced from https://towardsdatascience.com/how-to-train-an-image-classifier-in-pytorch-and-use-it-to-perform-basic-inference-on-single-images-99465a1e9bf5
 	"""
 
 	# 0. Split training & test data (should be the same as the one used to train the models) ##############################
@@ -176,17 +178,20 @@ def stacking():
 	pickle.dump(classifier, open(stacked_model_name, 'wb'))
 
 
+
 def process_arguments(parser):
 	# Default Settings
-	ensemble_index = 0
 	global stacked_model_name 
+	global ensemble_mode
 
 	args = parser.parse_args()
 
-	# Get Ensemble Learning Technique
-	if args.ei != None:
-		if args.ei == "stacking":
-			ensemble_index = 0
+	# Ensemble Mode
+	if args.em != None:
+		if args.em == "build":
+			ensemble_mode = 0
+		elif args.em == "predict":
+			ensemble_mode = 1
 
 	# Update stacked mdoel name
 	if args.ename != None:
@@ -199,8 +204,6 @@ def process_arguments(parser):
 		return 
 	'''
 
-	return ensemble_index
-
 if __name__ == '__main__':
 	# 0. Start Timer
 	timer = StopWatch()
@@ -208,16 +211,18 @@ if __name__ == '__main__':
 
 	# 1. Process Arguments
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--ei", help="Ensemble Index", choices=['stacking'])
-	parser.add_argument("--ename", help="Stacked Model name")
-	ensemble_index = process_arguments(parser)
+	parser.add_argument("--em", help="Ensemble Mode", choices=['build', 'predict'])
+	parser.add_argument("--ename", help="Stacked Model name (eg. stackedModel.sav)")
+	process_arguments(parser)
 
-	# 2. Run Ensemble Learning Technique
-	if ensemble_index == 0:
-		print("Running Stacking (Meta Ensembling)....")
-		stacking()
+	# 2. Run Ensemble Learning 
+	if ensemble_mode == 0:
+		print("Building Stacked Ensemble Model (Meta Ensembling)...")
+		build_stack_model()
+	elif ensemble_mode == 1:
+		print("Testing Stacked Ensemble Model...")
 	else:
-		print("No Ensemble Learning Technique Chosen...")
+		print("Nothing yet...")
 
 	# 3. End Timer
 	timer.stopTimer()
