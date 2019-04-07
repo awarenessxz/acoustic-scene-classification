@@ -13,12 +13,11 @@ warnings.filterwarnings("ignore")
 import torch.optim as optim
 from torchvision import transforms, utils
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 
 # import our own tools
 import cnnmodel as cnn
 from cnnmodel import BaselineASC
-from dataset2 import DataSetMixer, DCASEDataset
+from dataset import DCASEDataset, DatasetManager
 from utility import StopWatch
 
 '''
@@ -27,21 +26,12 @@ from utility import StopWatch
 ////////////////////////////////////////////////////////////////////////////////////
 '''
 
-# Use datasetManager if we want to control % of dataset to use, split train/test on our own, or when we do not have all audio files in audio directory
-combine_dataset = True 			
-dataset_percentage = 0.025
-dataset_training_ratio = 0.7
-under_sampling = False
-data_augumentation = False
-
 # Set the parameters below depending on the features to be extracted
-recompute_preprocessed_data = False 				# set to True to recompute the preprocessed data (it will delete all files in the parameters below)
 num_of_channel = 1
 feature_index = 0									# determine which feature to extract
-train_preprocessed_audios = "mono_spec_train.npy"	
-test_preprocessed_audios = "mono_spec_test.npy"
-preprocessed_norm_mean_file = "mono_spec_norm_mean.npy"
-preprocessed_norm_std_file = "mono_spec_norm_std.npy"
+preprocessed_features = "mono_spec.npy"
+preprocessed_norm_mean_file = "mono_norm_mean.npy"
+preprocessed_norm_std_file = "mono_norm_std.npy"
 saved_model = "mono_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
@@ -57,11 +47,7 @@ saved_model = "mono_BaselineASC.pt"
 ////////////////////////////////////////////////////////////////////////////////////
 '''
 
-def NormalizeData(train_labels_dir, root_dir):
-	# load the dataset
-	dcase_dataset = DCASEDataset(csv_file=train_labels_dir, root_dir=root_dir, 
-		feature_index=feature_index, preprocessed_file=train_preprocessed_audios)
-
+def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 	# concatenate the mel spectrograms in time-dimension, this variable accumulates the spectrograms
 	melConcat = np.asarray([])
 
@@ -129,39 +115,27 @@ def main():
 
 	device = torch.device("cuda" if use_cuda else "cpu")
 
-	# Recompute all preproessed data (due to changes in parameters)
-	if recompute_preprocessed_data:
-		if os.path.isfile(train_preprocessed_audios):
-			os.remove(train_preprocessed_audios)
-		if os.path.isfile(test_preprocessed_audios):
-			os.remove(test_preprocessed_audios)
-		if os.path.isfile(preprocessed_norm_mean_file):
-			os.remove(preprocessed_norm_mean_file)
-		if os.path.isfile(preprocessed_norm_std_file):
-			os.remove(preprocessed_norm_std_file)
 
 	# Step 1a: Preparing Data - Extract data ###########################################################
 
-	# init the train and test directories
-	train_labels_dir = 'Dataset/train/train_labels.csv'
-	test_labels_dir = 'Dataset/test/test_labels.csv'
-	train_data_dir = 'Dataset/train/'
-	test_data_dir = 'Dataset/test/'
-	root_dir = 'Dataset'
 
-	# combine train and test data
-	if combine_dataset:
-		# Initializae the dataset mixer
-		dataset_mixer = DataSetMixer(train_labels_dir, test_labels_dir, root_dir)
-		# generate train & test file
-		train_dataset_file = "train_dataset.csv"
-		test_dataset_file = "test_dataset.csv"
-		dataset_mixer.generate_data(train_dataset_file, test_dataset_file, dataset_percentage, dataset_training_ratio, under_sampling, data_augumentation)
-		# Update train and test directories
-		train_labels_dir = os.path.join(root_dir, train_dataset_file)
-		test_labels_dir = os.path.join(root_dir, test_dataset_file)
-		train_data_dir = root_dir
-		test_data_dir = root_dir
+	# init the train and test directories
+	train_labels_dir = '../Dataset/train/train_labels.csv'
+	test_labels_dir = '../Dataset/test/test_labels.csv'
+	root_dir = '../Dataset'
+
+	# Load all the dataset
+	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
+	data_manager.load_all_data()
+
+	# Load/Preprocess Feature for model
+	data_manager.load_feature(feature_index, preprocessed_features)
+
+	# Prepare data
+	train = np.arange(data_manager.get_train_data_size())		# Train indices = all of train data
+	test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
+	train_labels_dir, test_labels_dir = data_manager.prepare_data(train_indices=train, test_indices=test, train_only=False)
+
 
 	# Step 1b: Preparing Data - Transform Data #########################################################
 
@@ -173,7 +147,9 @@ def main():
 	else:
 		# If not, run the normalization and save the mean/std
 		print('DATA NORMALIZATION : ACCUMULATING THE DATA')
-		mean, std = NormalizeData(train_labels_dir, train_data_dir)
+		# load the datase
+		dcase_dataset = DCASEDataset(train_labels_dir, root_dir, data_manager, True)
+		mean, std = NormalizeData(train_labels_dir, root_dir, dcase_dataset)
 		np.save(preprocessed_norm_mean_file, mean)
 		np.save(preprocessed_norm_std_file, std)
 		print('DATA NORMALIZATION COMPLETED')
@@ -192,24 +168,11 @@ def main():
 		])
 
 	# init the datasets
-	dcase_dataset = DCASEDataset(csv_file=train_labels_dir,
-								root_dir=train_data_dir, feature_index=feature_index, 
-								preprocessed_file=train_preprocessed_audios, transform=data_transform)
-	dcase_dataset_test = DCASEDataset(csv_file=test_labels_dir,
-								root_dir=test_data_dir, feature_index=feature_index, 
-								preprocessed_file=test_preprocessed_audios, transform=data_transform)
+	dcase_dataset = DCASEDataset(csv_file=train_labels_dir, root_dir=root_dir, data_manager=data_manager,
+								is_train_data=True, transform=data_transform)
+	dcase_dataset_test = DCASEDataset(csv_file=test_labels_dir, root_dir=root_dir, data_manager=data_manager,
+								is_train_data=False, transform=data_transform)
 
-
-	# Split Train data into train/validate data
-	valid_ratio = 0.2
-	num_train_data = len(dcase_dataset)
-	indices = list(range(num_train_data))
-	split = int(np.floor(valid_ratio * num_train_data))
-	np.random.shuffle(indices)
-	train_idx, valid_idx = indices[split:], indices[:split]
-
-	train_sampler = SubsetRandomSampler(train_idx)
-	valid_sampler = SubsetRandomSampler(valid_idx)
 
 	# Step 1c: Preparing Data - Load Data ###############################################################
 
@@ -219,10 +182,10 @@ def main():
 
 	# get the training and testing data loader
 	train_loader = torch.utils.data.DataLoader(dcase_dataset,
-			batch_size=args.batch_size, sampler=train_sampler, **kwargs)
+			batch_size=args.batch_size, shuffle=True, **kwargs)
 
-	test_loader = torch.utils.data.DataLoader(dcase_dataset,
-			batch_size=args.test_batch_size, sampler=valid_sampler, **kwargs)
+	test_loader = torch.utils.data.DataLoader(dcase_dataset_test,
+			batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 
 	# Step 2: Build Model ###############################################################
@@ -242,21 +205,13 @@ def main():
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
-		#cnn.validate(args, model, device, train_loader, 'Training Data')		# validate
-		#cnn.test(args, model, device, test_loader, 'Validating Data')			# validate
+		cnn.test(args, model, device, train_loader, 'Training Data')		
+		cnn.test(args, model, device, test_loader, 'Test Data')			
 
 	print('MODEL TRAINING END')
 
 
 	# Step 4: Save Model ################################################################
-
-
-	print("Model TESTING START")
-	# test the model
-	cnn.predict(model, device, test_loader)
-
-	print("Model TESTING END")
-
 
 	# save the model
 	if (args.save_model):
@@ -265,7 +220,7 @@ def main():
 	# stop timer
 	timer.stopTimer()
 	timer.printElapsedTime()
-	
+
 		
 if __name__ == '__main__':
 	# create a separate main function because original main function is too mainstream

@@ -8,16 +8,19 @@
 - echo $STY --> see whether you are inside a screen
 - ctrl a d --> detach from a screen
 
-### Running the Program
+### Running the Individual CNN Model
 
-To run the code `python ensembleModel.py`
+To run the code: `python baseline_PyTorch.py`. The program extracts different features from the audio file for training the cnn model. Change the global variables in the program to train the CNN model using different features (refer to Features configuration below)
+
+### Running the Ensemble Program
+
+To run the code: `python ensembleModel.py`
 
 There are two modes to this program right now. Building and Predicting. 
 * Building Mode: `python ensembleModel.py --em build`
 	* apply [meta ensembling technique](http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/) to train and combine all the CNN models into one model (stacked model)
 * Predicting Mode: `python ensembleModel.py --em predict`
 	* use the saved models to predict the labels
-
 
 ### Features Configuration
 
@@ -29,8 +32,9 @@ The program extracts different features from the audio file for training the cnn
 	- preprocessed_features = "mono_spec.npy"
 	- fold_norm_means = ["mono_mean_f0.npy", "mono_mean_f1.npy", "mono_mean_f2.npy", "mono_mean_f3.npy", "mono_mean_f4.npy"]
 	- fold_norm_stds = ["mono_stds_f0.npy", "mono_stds_f1.npy", "mono_stds_f2.npy", "mono_stds_f3.npy", "mono_stds_f4.npy"]
-	- norm_means = "mono_norm_mean.npy"
+	- norm_means = "mono_norm_mean.npy"   
 	- norm_stds = "mono_norm_std.npy"
+	- save_models = "stackedModel.sav"
 
 1. Using Stereo Audio (Left Channel) Log Mel Spectrogram
 
