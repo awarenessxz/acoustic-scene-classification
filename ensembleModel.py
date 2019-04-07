@@ -40,6 +40,7 @@ fold_norm_stds = [
 # These are for step 4 to generate test_meta
 norm_means = ["mono_norm_mean.npy"]
 norm_stds = ["mono_norm_std.npy"]
+save_models = ["mono_cnn.pt"]
 
 # Ensemble Model Parameters
 stacked_model_name = "stackedModel.sav"
@@ -125,7 +126,7 @@ def build_stack_model():
 	# 4. Fit each model to the full training dataset & make predictions on the test dataset, store into test_meta ##############################
 
 
-	print("Getting Prediction Results to fill in train_meta")
+	print("Getting Prediction Results to fill in test_meta")
 
 	# For each model
 	for i in range(len(preprocessed_features)):
@@ -141,9 +142,12 @@ def build_stack_model():
 		norm_std = norm_stds[i]
 		norm_mean = norm_means[i]
 
+		# Get save model
+		model_name = save_models[i]
+
 		# Build Model & get prediction results
 		model, predictions = bm.buildCNNModel(train_csv=train_csv, test_csv=test_csv, norm_std=norm_std, norm_mean=norm_mean, 
-							data_manager=data_manager, num_of_channel=num_of_channels[i], save_model=False)
+						data_manager=data_manager, num_of_channel=num_of_channels[i], saved_model_name=model_name, save_model=True)
 
 		# Fill up the train_meta with predictions results of test.csv
 		for j in range(data_manager.get_test_data_size()):
@@ -155,6 +159,7 @@ def build_stack_model():
 
 	# 5. Fit (stacking model S) to train_meta, using (M1, M2, ... Mn) as features. ############################################################
 	# 6. Use the stacked model S to make final predictions on test_meta ############################################################
+
 
 	# get the training/testing label
 	train_meta_labels = data_manager.train_label_indices
