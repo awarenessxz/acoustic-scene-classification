@@ -7,11 +7,12 @@ import argparse
 import os
 import torch
 import numpy as np
+import pickle
 
 # Import own modules
 import basemodel as bm
 from dataset import DatasetManager
-from mltoolkit import ClassifierModel, PredictionEvaluator
+from mltoolkit import ClassifierModel
 from utility import StopWatch
 
 
@@ -41,6 +42,9 @@ norm_means = ["mono_norm_mean.npy"]
 norm_stds = ["mono_norm_std.npy"]
 
 
+stacked_model_name = "stackedModel.sav"
+
+
 '''
 ////////////////////////////////////////////////////////////////////////////////////
 ///						Functions												////
@@ -56,6 +60,7 @@ def stacking():
 
 	# 0. Split training & test data (should be the same as the one used to train the models) ##############################
 
+
 	train_labels_dir = '../Dataset/train/train_labels.csv'
 	test_labels_dir = '../Dataset/test/test_labels.csv'
 	root_dir = '../Dataset'
@@ -63,6 +68,7 @@ def stacking():
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
 	data_manager.load_all_data()
+
 
 	# 1. Partition Training Data into K folds #############################################################################
 
@@ -153,28 +159,27 @@ def stacking():
 	test_meta_labels = data_manager.test_label_indices
 
 	# Fit and Train classifier Model (step 5 & 6)
-	classifier = ClassifierModel(train_meta, train_meta_labels, test_meta)
-	predicts = classifier.run_LR_classification()
+	classifier = ClassifierModel(train_meta, train_meta_labels, test_meta, test_meta_labels)
+	predicts = classifier.run_decision_tree_classification()
 
 	# Evaluate 
-	evaluator = PredictionEvaluator(predicts, test_meta_labels)
-	precision, recall, f1_measure = evaluator.evaluate_prediction()
-
-	print('Average Precision is %f.' % precision)
-	print('Average Recall is %f.' % recall)
-	print('Average F-Measure is %f' % f1_measure)
+	precision, recall, f1_measure = classifier.evaluate_prediction(predicts)
+	correct, total = classifier.get_accuracy(predicts)
+	
+	print("Stacked Model Prediction:\nAccuracy: {}/{}\nPrecision: {}\nRecall: {}\nF1 Measure:{}".format(
+		correct, total, precision, recall, f1_measure))
 
 
 	# 7. Save the ensemble model ########################################################################################################################
 
 
-
-
+	pickle.dump(classifier, open(stacked_model_name, 'wb'))
 
 
 def process_arguments(parser):
 	# Default Settings
 	ensemble_index = 0
+	global stacked_model_name 
 
 	args = parser.parse_args()
 
@@ -182,6 +187,10 @@ def process_arguments(parser):
 	if args.ei != None:
 		if args.ei == "stacking":
 			ensemble_index = 0
+
+	# Update stacked mdoel name
+	if args.ename != None:
+		stacked_model_name = args.ename
 
 	'''
 	# Get Ensemble Learning Technique Choice
@@ -200,6 +209,7 @@ if __name__ == '__main__':
 	# 1. Process Arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--ei", help="Ensemble Index", choices=['stacking'])
+	parser.add_argument("--ename", help="Stacked Model name")
 	ensemble_index = process_arguments(parser)
 
 	# 2. Run Ensemble Learning Technique

@@ -10,6 +10,7 @@ from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, precision_score, recall_score
 
+import pickle
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -36,10 +37,11 @@ def compute_F_measure(p, r, beta=1):
 
 class ClassifierModel:
 
-	def __init__(self, x_train, y_train, x_test):
+	def __init__(self, x_train, y_train, x_test, y_test):
 		self.x_train = x_train
 		self.y_train = y_train
 		self.x_test = x_test
+		self.y_test = y_test
 
 	'''
 	Train and Predict using Nayes Bayes Classification Model
@@ -112,32 +114,38 @@ class ClassifierModel:
 
 		return predicts
 
-'''
-////////////////////////////////////////////////////////////////////////////////////
-///			Class to evaluate the prediction results							////
-////////////////////////////////////////////////////////////////////////////////////
-'''
-
-class PredictionEvaluator:
-
-	def __init__(self, predicts, y_test):
-		self.predicts = predicts
-		self.y_test = y_test
-
 	'''
 	Evaluate prediction based on precision, recall, f_meaure
 	'''
-	def evaluate_prediction(self):
+	def evaluate_prediction(self, predicts):
 		#print(classification_report(self.y_test, self.predicts))
-		precision = precision_score(self.y_test, self.predicts, average='macro')
-		recall = recall_score(self.y_test, self.predicts, average='macro')
+		precision = precision_score(self.y_test, predicts, average='macro')
+		recall = recall_score(self.y_test, predicts, average='macro')
 
 		f_score = compute_F_measure(precision, recall)
 
 		return precision, recall, f_score
 
-	def get_accuracy(self):
-		
+	'''
+	Get Accuracy 
+	'''
+	def get_accuracy(self, predicts):
+		total = len(predicts)
+		correct = 0
+
+		for index, (x, y) in enumerate(zip(predicts, self.y_test)):
+			if x == y:
+				correct += 1
+
+		return correct, total
+
+	'''
+	Save Model
+	'''
+	def save_model(self, classifier, filename):
+		pickle.dump(classifier, open(filename, 'wb'))
+ 
+
 
 
 
