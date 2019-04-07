@@ -11,6 +11,7 @@ import pickle
 
 # Import own modules
 import basemodel as bm
+import utility as util
 from dataset import DatasetManager
 from mltoolkit import ClassifierModel
 from utility import StopWatch
@@ -172,16 +173,74 @@ def build_stack_model():
 	# Evaluate 
 	precision, recall, f1_measure = classifier.evaluate_prediction(predicts)
 	correct, total = classifier.get_accuracy(predicts)
+	percentage = 100 * correct / total
 	
-	print("Stacked Model Prediction:\nAccuracy: {}/{}\nPrecision: {}\nRecall: {}\nF1 Measure:{}".format(
-		correct, total, precision, recall, f1_measure))
-
+	print("Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\nPrecision: {}\nRecall: {}\nF1 Measure:{}".format(
+		correct, total, percentage, precision, recall, f1_measure))
 
 	# 7. Save the ensemble model ########################################################################################################################
 
+	classifier.save_model(stacked_model_name)
 
-	pickle.dump(classifier, open(stacked_model_name, 'wb'))
 
+
+def predict_with_stack_model():
+	"""
+		load previously saved model to predict labels on test
+	"""
+
+	# 1. Load the Testing Data #######################################################################################
+
+
+	test_labels_dir = '../Dataset/test/test_labels.csv'
+	root_dir = '../Dataset'
+
+	# Load all the dataset
+	data_manager = DatasetManager("", test_labels_dir, root_dir)
+	data_manager.load_all_data()
+
+	# Initialize the input_vector for stacked model
+	input_vect = np.empty((data_manager.get_test_data_size(), len(save_models)))		# (n x m) where n = audio data, m = model 
+
+
+	# 2. Get Prediction Results from each Model #######################################################################
+
+
+	# For each model
+	for i in range(len(save_models)):
+		# Preprocess Feature for model
+		data_manager.load_feature(i, preprocessed_features[i])
+
+		# Prepare data
+		test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
+		train_csv, test_csv = data_manager.prepare_data(train_indices=[], test_indices=test, train_only=False)
+
+		# Get Normalized preprocessed data file
+		norm_std = norm_stds[i]
+		norm_mean = norm_means[i]
+
+		# Test the saved model & get prediction results
+		predictions = bm.testCNNModel(saved_model_path=save_models[i], test_csv=test_csv, norm_std=norm_std, norm_mean=norm_mean,
+			data_manager=data_manager, num_of_channel=num_of_channels[i])
+
+		# Fill up the input_vector with predictions results from model
+		for j in range(data_manager.get_test_data_size()):
+			v_idx = test[j]
+			input_vect[v_idx][i] = predictions[j]
+
+
+	# 3. Get Prediction Results from Stack Model based on input_vector  ####################################################
+
+	# Load the stacked model
+	stacked_em = pickle.load(open(stacked_model_name, 'rb'))
+
+	# Get Prediction Results
+	predicts = stacked_em.predict(input_vect)
+
+	# Print prediction Accuracy
+	correct, total = util.compare_list_elements(predicts, data_manager.test_label_indices)
+	percentage = 100 * correct / total
+	print("Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(correct, total, percentage))
 
 
 def process_arguments(parser):
@@ -226,6 +285,7 @@ if __name__ == '__main__':
 		build_stack_model()
 	elif ensemble_mode == 1:
 		print("Testing Stacked Ensemble Model...")
+		predict_with_stack_model()
 	else:
 		print("Nothing yet...")
 

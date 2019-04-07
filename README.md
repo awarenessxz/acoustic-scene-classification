@@ -17,8 +17,10 @@ To run the code: `python baseline_PyTorch.py`. The program extracts different fe
 To run the code: `python ensembleModel.py`
 
 There are two modes to this program right now. Building and Predicting. 
-* Building Mode: `python ensembleModel.py --em build`
+
+* Building Mode: `python ensembleModel.py` or `python ensembleModel.py --em build`
 	* apply [meta ensembling technique](http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/) to train and combine all the CNN models into one model (stacked model)
+
 * Predicting Mode: `python ensembleModel.py --em predict`
 	* use the saved models to predict the labels
 

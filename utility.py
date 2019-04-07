@@ -5,9 +5,71 @@ Utility functions / Classes
 import datetime
 import time
 
+'''
+////////////////////////////////////////////////////////////////////////////////////
+///					General Function											////
+////////////////////////////////////////////////////////////////////////////////////
+'''
+
+def isStrEmpty(input_str):
+	if not input_str:
+		print("Empty")
+	else:
+		print("Not Empty")
+
+def isListEmpty(input_list):
+	if not input_list:
+		print("Empty List")
+	else:
+		print("Not Empty")
+
+def compare_list_elements(listA, listB):
+	"""
+		Compare two list element wise and return number of correct elements
+		Note: List should be same size
+	"""
+
+	sizeA = len(listA)
+	sizeB = len(listB)
+
+	if sizeA != sizeB:
+		print("ERROR LIST ARE NOT EQUAL IN SIZE")
+		return
+
+	total = sizeA
+	correct = 0
+
+	for index, (x,y) in enumerate(zip(listA, listB)):
+		if x == y:
+			correct += 1
+
+	return correct, total
+
+
+'''
+////////////////////////////////////////////////////////////////////////////////////
+///					Useful Classes												////
+////////////////////////////////////////////////////////////////////////////////////
+'''
+
 class Namespace:
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+	"""
+		create your own dictionary of args
+		convert that dictionary into format similar to args = argparse.ArgumentParser().parse_args()
+		
+		Eg. 
+		args = {
+			"batch_size": 16,
+			"no_cuda": True,
+			"seed": 1,
+		}
+		args = Namespace(**args)
+		
+		print(args.batch_size)
+	"""
+
+	def __init__(self, **kwargs):
+		self.__dict__.update(kwargs)
 
 class StopWatch:
 	"""

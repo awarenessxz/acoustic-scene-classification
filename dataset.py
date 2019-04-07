@@ -55,7 +55,7 @@ class DatasetManager():
 
 	def get_train_data_size(self):
 		# check that data have been loaded
-		if not self.train_data_list:
+		if (not self.train_data_list) and self.train_csv_filepath:	# self.train_csv_filepath != ""
 			print("Data have not been loaded. Running data_manager.load_all_data()...")
 			self.load_all_data()
 
@@ -63,7 +63,7 @@ class DatasetManager():
 
 	def get_test_data_size(self):
 		# check that data have been loaded
-		if not self.test_data_list:
+		if not self.test_data_list and self.test_csv_filepath:		# self.test_csv_filepath != ""	
 			print("Data have not been loaded. Running data_manager.load_all_data()...")
 			self.load_all_data()
 
@@ -271,8 +271,9 @@ class DatasetManager():
 
 		if (not self.train_idx_map) or (not self.test_idx_map):
 			# Mapping is empty
-			print("Index mapping is empty. Please run prepare_data() first.")
-			return
+			if (not self.train_csv_filepath) and (not self.test_csv_filepath):		# check if csv file is empty string
+				print("Index mapping is empty. Please run prepare_data() first.")
+				return
 
 		if data_type == "train":
 			return self.train_idx_map[idx]
@@ -317,6 +318,11 @@ class DatasetManager():
 		data_list = []
 		label_list = []
 		label_indices = []
+
+		# check if csv_file == "" 	(for empty train.csv)
+		if not csv_file:
+			return [], [], []
+
 
 		with open(csv_file, 'r') as f:
 			content = f.readlines()

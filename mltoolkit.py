@@ -28,7 +28,6 @@ def compute_F_measure(p, r, beta=1):
 
 	return ((pow(beta, 2) + 1) * p * r) / (pow(beta, 2) * p + r)
 
-
 '''
 ////////////////////////////////////////////////////////////////////////////////////
 ///			Class to run the different classifier model							////
@@ -42,13 +41,14 @@ class ClassifierModel:
 		self.y_train = y_train
 		self.x_test = x_test
 		self.y_test = y_test
+		self.model = None
 
 	'''
 	Train and Predict using Nayes Bayes Classification Model
 	'''
 	def run_nayes_bayes_classification(self):
-		model = MultinomialNB().fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = MultinomialNB().fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
 		return predicts
 
@@ -56,9 +56,9 @@ class ClassifierModel:
 	Train and Predict using K Nearest Neighbour Classification Model
 	'''
 	def run_KNN_classification(self, k=11):
-		model = KNeighborsClassifier(n_neighbors=k)
-		model.fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = KNeighborsClassifier(n_neighbors=k)
+		self.model.fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
 		return predicts
 
@@ -66,9 +66,9 @@ class ClassifierModel:
 	Train and Predict using Decision Tree Classification Model
 	'''
 	def run_decision_tree_classification(self):
-		model = DecisionTreeClassifier()
-		model.fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = DecisionTreeClassifier()
+		self.model.fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
 		return predicts
 
@@ -76,11 +76,11 @@ class ClassifierModel:
 	Train and Predict using Random Forest Classification Model
 	'''
 	def run_random_forest_classification(self):
-		model = RandomForestClassifier(max_depth=5, n_estimators=10)
-		model.fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = RandomForestClassifier(max_depth=5, n_estimators=10)
+		self.model.fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
-		feature_importances = model.feature_importances_
+		feature_importances = self.model.feature_importances_
 
 		return predicts, feature_importances
 
@@ -88,9 +88,9 @@ class ClassifierModel:
 	Train and Predict using Support Vector Machine (SVM) Classification Model
 	'''
 	def run_SVM_classification(self):
-		model = LinearSVC(random_state=0, tol=1e-5)	
-		model.fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = LinearSVC(random_state=0, tol=1e-5)	
+		self.model.fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
 		return predicts
 
@@ -98,9 +98,9 @@ class ClassifierModel:
 	Train and Predict using Stochastic Gradient Descent (SGD) Classification Model
 	'''
 	def run_SGD_classification(self):
-		model = SGDClassifier(max_iter=1000, tol=1e-3)	
-		model.fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = SGDClassifier(max_iter=1000, tol=1e-3)	
+		self.model.fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
 		return predicts
 
@@ -108,9 +108,9 @@ class ClassifierModel:
 	Train and Predict using Logistic Regression Classification Model
 	'''
 	def run_LR_classification(self):
-		model = LogisticRegression()
-		model.fit(self.x_train, self.y_train)
-		predicts = model.predict(self.x_test)
+		self.model = LogisticRegression()
+		self.model.fit(self.x_train, self.y_train)
+		predicts = self.model.predict(self.x_test)
 
 		return predicts
 
@@ -142,8 +142,15 @@ class ClassifierModel:
 	'''
 	Save Model
 	'''
-	def save_model(self, classifier, filename):
-		pickle.dump(classifier, open(filename, 'wb'))
+	def save_model(self, filename):
+		pickle.dump(self.model, open(filename, 'wb'))
+
+	'''
+	Load Model
+	'''
+	def load_model(self, filename):
+		self.model = pickle.load(open(filename, 'rb'))
+
  
 
 
