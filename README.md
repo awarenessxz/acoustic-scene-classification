@@ -1,3 +1,27 @@
+## Acoustic Scene Classification
+
+### Overview
+
+The goal of acoustic scene classification is to classify a test recording into one of the provided predefined classes that characterizes the environment in which it was recorded. The baseline code of this project is referenced from (CS4347_ASC_BaselineModel)[https://github.com/ssrp/CS4347_ASC_GroupProject]
+
+Acoustic scenes Classes/Labels:
+- Airport - airport
+- Indoor shopping mall - shopping_mall
+- Metro station - metro_station
+- Pedestrian street - street_pedestrian
+- Public square - public_square
+- Street with medium level of traffic - street_traffic
+- Travelling by a tram - tram
+- Travelling by a bus - bus
+- Travelling by an underground metro - metro
+- Urban park - park
+
+### Dataset
+
+You can access the training dataset on [this Google Drive Link](https://drive.google.com/drive/u/1/folders/1HaMgbk2Heszdj71b_6H20-J01Xh8M3u8). It is already divided into train and test sets. You can start downloading the dataset as it is about 10GB+.
+
+The dataset for this project is the TUT Urban Acoustic Scenes 2018 dataset, consisting of recordings from various acoustic scenes. The dataset was recorded in six large european cities, in different locations for each scene class. For each recording location there are 5-6 minutes of audio. The original recordings were split into segments with a length of 10 seconds that are provided in individual files. Available information about the recordings include the following: acoustic scene class (label).
+
 ### Environment Settings
 - Python 3.6.4
 
