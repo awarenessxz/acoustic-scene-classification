@@ -125,7 +125,8 @@ class DatasetManager():
 				elif feature_index == 5:
 					mel_specs.append(ap.extract_mel_spectrogram_for_3f(wav_name))
 
-			np.save(filename, mel_specs)
+			if filename:
+				np.save(filename, mel_specs)
 
 			mel_specs = np.asarray(mel_specs)
 			self.audio_data = mel_specs

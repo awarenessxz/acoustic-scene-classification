@@ -60,7 +60,7 @@ def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 	return mean, std
 
 def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of_channel, saved_model_name="",
-	test_batch_size=16, batch_size=16, epochs=1, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
+	test_batch_size=16, batch_size=16, epochs=200, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
 	"""
 		Build and Train CNN model
 		
