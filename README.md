@@ -39,9 +39,25 @@ The program extracts different features from the audio file for training the cnn
 	- save_models = "mono_cnn.pt"
 
 1. Using Stereo Audio (Left Channel) Log Mel Spectrogram
+	- **feature_index = 1**
+	- num_of_channel = 1
+	- preprocessed_features = "left_spec.npy"
+	- fold_norm_means = ["left_mean_f0.npy", "left_mean_f1.npy", "left_mean_f2.npy", "left_mean_f3.npy", "left_mean_f4.npy"]
+	- fold_norm_stds = ["left_stds_f0.npy", "left_stds_f1.npy", "left_stds_f2.npy", "left_stds_f3.npy", "left_stds_f4.npy"]
+	- norm_means = "left_norm_mean.npy"   
+	- norm_stds = "left_norm_std.npy"
+	- save_models = "left_cnn.pt"
 
 
 2. Using Stereo Audio (Right Channel) Log Mel Spectrogram
+	- **feature_index = 2**
+	- num_of_channel = 1
+	- preprocessed_features = "right_spec.npy"
+	- fold_norm_means = ["right_mean_f0.npy", "right_mean_f1.npy", "right_mean_f2.npy", "right_mean_f3.npy", "right_mean_f4.npy"]
+	- fold_norm_stds = ["right_stds_f0.npy", "right_stds_f1.npy", "right_stds_f2.npy", "right_stds_f3.npy", "right_stds_f4.npy"]
+	- norm_means = "right_norm_mean.npy"   
+	- norm_stds = "right_norm_std.npy"
+	- save_models = "right_cnn.pt"
 
 
 3. Using Stereo Audio (both channel) Log Mel Spectrogram
@@ -59,6 +75,14 @@ The program extracts different features from the audio file for training the cnn
 
 
 5. Using HPSS with Mono Log Mel Spectrogram (3 channels)
+	- **feature_index = 5**
+	- num_of_channel = 3
+	- preprocessed_features = "3F_spec.npy"
+	- fold_norm_means = ["3F_mean_f0.npy", "3F_mean_f1.npy", "3F_mean_f2.npy", "3F_mean_f3.npy", "3F_mean_f4.npy"]
+	- fold_norm_stds = ["3F_stds_f0.npy", "3F_stds_f1.npy", "3F_stds_f2.npy", "3F_stds_f3.npy", "3F_stds_f4.npy"]
+	- norm_means = "3F_norm_mean.npy"   
+	- norm_stds = "3F_norm_std.npy"
+	- save_models = "3F_cnn.pt"
 
 
 

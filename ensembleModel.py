@@ -107,7 +107,7 @@ def build_stack_model():
 			fid = feat_indices[i]
 
 			# Load/Preprocess Feature for model
-			preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[fid])
+			preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[i])
 			data_manager.load_feature(fid, preprocessed_features_filepath)
 
 			# Prepare data
@@ -115,17 +115,17 @@ def build_stack_model():
 
 			# Normalized data have to be recomputed everytime as the training data is always different. Hence, we will 
 			# not be saving this normalized data
-			norm_std = os.path.join(processed_root_dir, fold_norm_stds[fid][fold])
-			norm_mean = os.path.join(processed_root_dir, fold_norm_means[fid][fold])
+			norm_std = os.path.join(processed_root_dir, fold_norm_stds[i][fold])
+			norm_mean = os.path.join(processed_root_dir, fold_norm_means[i][fold])
 
 			# Build Model & get prediction results
 			model, predictions = bm.buildCNNModel(train_csv=train_csv, test_csv=test_csv, norm_std=norm_std, norm_mean=norm_mean, 
-							data_manager=data_manager, num_of_channel=num_of_channels[fid], save_model=False)
+							data_manager=data_manager, num_of_channel=num_of_channels[i], save_model=False)
 
 			# Fill up the train_meta with predictions results of test.csv
 			for j in range(len(validate)):
 				v_idx = validate[j]
-				train_meta[v_idx][fid] = predictions[j]
+				train_meta[v_idx][i] = predictions[j]
 
 		print("End of Fold #%i." % (fold+1))
 		fold += 1
@@ -144,7 +144,7 @@ def build_stack_model():
 		fid = feat_indices[i]
 		
 		# Load/Preprocess Feature for model
-		preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[fid])
+		preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[i])
 		data_manager.load_feature(fid, preprocessed_features_filepath)
 
 		# Prepare data
@@ -153,20 +153,20 @@ def build_stack_model():
 		train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=test, train_only=False)
 
 		# Get Normalized preprocessed data file
-		norm_std = os.path.join(processed_root_dir, norm_stds[fid])
-		norm_mean = os.path.join(processed_root_dir, norm_means[fid])
+		norm_std = os.path.join(processed_root_dir, norm_stds[i])
+		norm_mean = os.path.join(processed_root_dir, norm_means[i])
 
 		# Get save model
-		model_name = os.path.join(processed_root_dir, save_models[fid])
+		model_name = os.path.join(processed_root_dir, save_models[i])
 
 		# Build Model & get prediction results
 		model, predictions = bm.buildCNNModel(train_csv=train_csv, test_csv=test_csv, norm_std=norm_std, norm_mean=norm_mean, 
-						data_manager=data_manager, num_of_channel=num_of_channels[fid], saved_model_name=model_name, save_model=True)
+						data_manager=data_manager, num_of_channel=num_of_channels[i], saved_model_name=model_name, save_model=True)
 
 		# Fill up the train_meta with predictions results of test.csv
 		for j in range(data_manager.get_test_data_size()):
 			v_idx = test[j]
-			test_meta[v_idx][fid] = predictions[j]
+			test_meta[v_idx][i] = predictions[j]
 
 	print("Test_meta generated successfully.")
 
@@ -228,7 +228,7 @@ def predict_with_stack_model():
 		fid = feat_indices[i]
 
 		# Preprocess Feature for model
-		preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[fid])
+		preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[i])
 		data_manager.load_feature(fid, preprocessed_features_filepath)	# THIS HAVE TO BE REMOVED (BECAUSE WHEN PREDICTING, we won't have preprocess thea udio file as we don't know what it is. leave it balnk)
 
 		# Prepare data
@@ -236,17 +236,17 @@ def predict_with_stack_model():
 		train_csv, test_csv = data_manager.prepare_data(train_indices=[], test_indices=test, train_only=False)
 
 		# Get Normalized preprocessed data file
-		norm_std = os.path.join(processed_root_dir, norm_stds[fid])
-		norm_mean = os.path.join(processed_root_dir, norm_means[fid])
+		norm_std = os.path.join(processed_root_dir, norm_stds[i])
+		norm_mean = os.path.join(processed_root_dir, norm_means[i])
 
 		# Test the saved model & get prediction results
-		predictions = bm.testCNNModel(saved_model_path=save_models[fid], test_csv=test_csv, norm_std=norm_std, 
-			norm_mean=norm_mean, data_manager=data_manager, num_of_channel=num_of_channels[fid])
+		predictions = bm.testCNNModel(saved_model_path=save_models[i], test_csv=test_csv, norm_std=norm_std, 
+			norm_mean=norm_mean, data_manager=data_manager, num_of_channel=num_of_channels[i])
 
 		# Fill up the input_vector with predictions results from model
 		for j in range(data_manager.get_test_data_size()):
 			v_idx = test[j]
-			input_vect[v_idx][fid] = predictions[j]
+			input_vect[v_idx][i] = predictions[j]
 
 
 	# 3. Get Prediction Results from Stack Model based on input_vector  ####################################################
