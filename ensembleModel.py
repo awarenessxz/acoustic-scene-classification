@@ -48,7 +48,7 @@ norm_stds = ["mono_norm_std.npy", "LR_norm_std.npy"]
 save_models = ["mono_cnn.pt", "LR_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel.sav"
+stacked_model_name = "stackedModel.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 
@@ -88,8 +88,8 @@ def build_stack_model():
 	# 2. Create 2 dataset (train_meta & test_meta) with n empty columsn (M1, M2, ... Mn) where n = number of models ##############################
 
 
-	train_meta = np.empty((data_manager.get_train_data_size(), len(preprocessed_features)))		# (n x m) where n = audio data, m = model 
-	test_meta = np.empty((data_manager.get_test_data_size(), len(preprocessed_features)))		# (n x m) where n = audio data, m = model 
+	train_meta = np.empty((data_manager.get_train_data_size(), len(save_models)))		# (n x m) where n = audio data, m = model 
+	test_meta = np.empty((data_manager.get_test_data_size(), len(save_models)))			# (n x m) where n = audio data, m = model 
 
 
 	# 3. Apply K-fold cross validation to fill up empty columns (M1, M2, .... Mn) of train_meta with prediction results for each folds ##############################
@@ -176,8 +176,13 @@ def build_stack_model():
 
 
 	# get the training/testing label
-	train_meta_labels = data_manager.train_label_indices
-	test_meta_labels = data_manager.test_label_indices
+	train_meta_labels = np.asarray(data_manager.train_label_indices)
+	test_meta_labels = np.asarray(data_manager.test_label_indices)
+
+	print(train_meta.shape)
+	print(test_meta.shape)
+	print(train_meta_labels.shape)
+	print(test_meta_labels.shape)
 
 	# Fit and Train classifier Model (step 5 & 6)
 	classifier = ClassifierModel(train_meta, train_meta_labels, test_meta, test_meta_labels)
@@ -188,7 +193,7 @@ def build_stack_model():
 	correct, total = classifier.get_accuracy(predicts)
 	percentage = 100 * correct / total
 	
-	print("Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\nPrecision: {}\nRecall: {}\nF1 Measure:{}".format(
+	print("Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
 		correct, total, percentage, precision, recall, f1_measure))
 
 	# 7. Save the ensemble model ########################################################################################################################
@@ -239,8 +244,11 @@ def predict_with_stack_model():
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])
 		norm_mean = os.path.join(processed_root_dir, norm_means[i])
 
+		# Get saved model path
+		saved_model_path = os.path.join(processed_root_dir, save_models[i])
+
 		# Test the saved model & get prediction results
-		predictions = bm.testCNNModel(saved_model_path=save_models[i], test_csv=test_csv, norm_std=norm_std, 
+		predictions = bm.testCNNModel(saved_model_path=saved_model_path, test_csv=test_csv, norm_std=norm_std, 
 			norm_mean=norm_mean, data_manager=data_manager, num_of_channel=num_of_channels[i])
 
 		# Fill up the input_vector with predictions results from model
@@ -252,7 +260,10 @@ def predict_with_stack_model():
 	# 3. Get Prediction Results from Stack Model based on input_vector  ####################################################
 
 	# Load the stacked model
-	stacked_em = pickle.load(open(stacked_model_name, 'rb'))
+	stacked_model_filepath = os.path.join(processed_root_dir, stacked_model_name)
+	stacked_em = pickle.load(open(stacked_model_filepath, 'rb'))
+
+	print(input_vect.shape)
 
 	# Get Prediction Results
 	predicts = stacked_em.predict(input_vect)
