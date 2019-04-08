@@ -201,6 +201,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
+		print("MODEL: %s" % saved_model_name)
 		cnn.test(args, model, device, valid_loader, "Validation Data")
 		#cnn.test(args, model, device, train_loader, 'Training Data')
 		#cnn.test(args, model, device, test_loader, 'Testing Data')

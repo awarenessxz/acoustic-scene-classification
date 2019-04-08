@@ -47,6 +47,9 @@ class DatasetManager():
 		self.test_data_list = []
 		self.test_label_list = []
 		self.test_label_indices = []
+		self.audio_files = []
+		self.audio_labels = []
+		self.audio_label_indices = []
 		self.data_type = []
 		self.audio_data = np.asarray([])
 
@@ -54,19 +57,9 @@ class DatasetManager():
 		return self.available_data_size
 
 	def get_train_data_size(self):
-		# check that data have been loaded
-		if (not self.train_data_list) and self.train_csv_filepath:	# self.train_csv_filepath != ""
-			print("Data have not been loaded. Running data_manager.load_all_data()...")
-			self.load_all_data()
-
 		return len(self.train_data_list)
 
 	def get_test_data_size(self):
-		# check that data have been loaded
-		if not self.test_data_list and self.test_csv_filepath:		# self.test_csv_filepath != ""	
-			print("Data have not been loaded. Running data_manager.load_all_data()...")
-			self.load_all_data()
-
 		return len(self.test_data_list)
 
 	def load_all_data(self):
@@ -180,6 +173,36 @@ class DatasetManager():
 
 		return kfolds
 
+	def prepare_test_data(self, test_csv="test_dataset.csv"):
+		"""
+			This is used when testing model. Instead of preparing both train/test csv in prepare_data().
+			This function only prepares the test.csv
+		"""
+
+		# Prepare csv file path
+		test_filepath = os.path.join(self.root_dir, test_csv)
+
+		# Extract data for test.csv
+		test_csv_data = []
+		for i in range(self.get_test_data_size()):
+			# Get dataset
+			dataset = []
+			dataset.append(self.test_data_list[i])
+			dataset.append(self.test_label_list[i])
+			dataset.append(self.test_label_indices[i])
+			test_csv_data.append(dataset)
+
+		# Write into test csv file
+		with open(test_filepath, 'w') as csvFile:
+			writer = csv.writer(csvFile)
+			writer.writerows(test_csv_data)
+		csvFile.close()
+
+		print("Test Data Labels generated in %s (test)" % test_filepath)
+
+		return test_filepath
+
+
 	def prepare_data(self, train_indices, test_indices, train_only, train_csv="train_dataset.csv", test_csv="test_dataset.csv"):
 		"""
 			train_indices (array of index): indices of all training audio files
@@ -258,7 +281,7 @@ class DatasetManager():
 			writer.writerows(test_csv_data)
 		csvFile.close()
 
-		print("Data generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
+		print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
 
 		return train_filepath, test_filepath
 
@@ -272,17 +295,22 @@ class DatasetManager():
 
 		if (not self.train_idx_map) or (not self.test_idx_map):
 			# Mapping is empty
-			if (not self.train_csv_filepath) and (not self.test_csv_filepath):		# check if csv file is empty string
-				print("Index mapping is empty. Please run prepare_data() first.")
-				return
-
-		if data_type == "train":
-			return self.train_idx_map[idx]
-		elif data_type == "test":
-			return self.test_idx_map[idx]
+			return idx 					
 		else:
-			print("Error! Invalid data type")
-			return
+			# Mapping is not empty
+			if data_type == "train":
+				if idx >= len(self.train_idx_map):
+					print("Index out of size: %i" % idx)
+
+				return self.train_idx_map[idx]
+			elif data_type == "test":
+				if idx >= len(self.test_idx_map):
+					print("Index out of size: %i" % idx)
+
+				return self.test_idx_map[idx]
+			else:
+				print("Error! Invalid data type")
+				return
 
 	def split_into_classes(self):
 		"""

@@ -72,7 +72,6 @@ The program extracts different features from the audio file for training the cnn
 	- norm_stds = "left_norm_std.npy"
 	- save_models = "left_cnn.pt"
 
-
 2. Using Stereo Audio (Right Channel) Log Mel Spectrogram
 	- **feature_index = 2**
 	- num_of_channel = 1
@@ -83,7 +82,6 @@ The program extracts different features from the audio file for training the cnn
 	- norm_stds = "right_norm_std.npy"
 	- save_models = "right_cnn.pt"
 
-
 3. Using Stereo Audio (both channel) Log Mel Spectrogram
 	- **feature_index = 3**
 	- num_of_channel = 2
@@ -93,7 +91,6 @@ The program extracts different features from the audio file for training the cnn
 	- norm_means = "LR_norm_mean.npy"   
 	- norm_stds = "LR_norm_std.npy"
 	- save_models = "LR_cnn.pt"
-
 
 4. Using Harmonic Percussive Source Seperation (HPSS) Log Mel Spectrogram
 

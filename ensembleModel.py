@@ -24,33 +24,33 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-
-feat_indices = [0, 3]
+feat_indices = [1, 2, 5]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["mono_spec.npy", "LR_spec.npy"] 
-num_of_channels = [1, 2]		
+preprocessed_features = ["left_spec.npy", "right_spec.npy", "3F_spec.npy"] 
+num_of_channels = [1, 1, 3]		
 
 # These are for step 3. Cross validation of training data to generate train_meta
 K_FOLD = 5
 fold_norm_means = [
-	["mono_mean_f0.npy", "mono_mean_f1.npy", "mono_mean_f2.npy", "mono_mean_f3.npy", "mono_mean_f4.npy"],
-	["LR_mean_f0.npy", "LR_mean_f1.npy", "LR_mean_f2.npy", "LR_mean_f3.npy", "LR_mean_f4.npy"],
+	["left_mean_f0.npy", "left_mean_f1.npy", "left_mean_f2.npy", "left_mean_f3.npy", "left_mean_f4.npy"],
+	["right_mean_f0.npy", "right_mean_f1.npy", "right_mean_f2.npy", "right_mean_f3.npy", "right_mean_f4.npy"],
+	["3F_mean_f0.npy", "3F_mean_f1.npy", "3F_mean_f2.npy", "3F_mean_f3.npy", "3F_mean_f4.npy"],
 ]
 fold_norm_stds = [
-	["mono_stds_f0.npy", "mono_stds_f1.npy", "mono_stds_f2.npy", "mono_stds_f3.npy", "mono_stds_f4.npy"],
-	["LR_stds_f0.npy", "LR_stds_f1.npy", "LR_stds_f2.npy", "LR_stds_f3.npy", "LR_stds_f4.npy"],
+	["left_stds_f0.npy", "left_stds_f1.npy", "left_stds_f2.npy", "left_stds_f3.npy", "left_stds_f4.npy"],
+	["right_stds_f0.npy", "right_stds_f1.npy", "right_stds_f2.npy", "right_stds_f3.npy", "right_stds_f4.npy"],
+	["3F_stds_f0.npy", "3F_stds_f1.npy", "3F_stds_f2.npy", "3F_stds_f3.npy", "3F_stds_f4.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["mono_norm_mean.npy", "LR_norm_mean.npy"]
-norm_stds = ["mono_norm_std.npy", "LR_norm_std.npy"]
-save_models = ["mono_cnn.pt", "LR_cnn.pt"]
+norm_means = ["left_norm_mean.npy", "right_norm_std.npy", "3F_norm_mean.npy"]
+norm_stds = ["left_norm_std.npy", "right_norm_std.npy", "3F_norm_std.npy"]
+save_models = ["left_cnn.pt", "right_cnn.pt", "3F_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel.pkl"
+stacked_model_name = "stackedModel1.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
-
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -98,11 +98,12 @@ def build_stack_model():
 	print("Getting Prediction Results to fill in train_meta")
 	fold = 0		# fold counter
 	for train, validate in kfolds:										# train, validate is a list of index
-
 		print("Cross Validation Fold #%i..." % (fold+1))
 
 		# For each model
 		for i in range(len(preprocessed_features)):	
+			print("Fold #%i for model (%s)..." % ((fold+1), save_models[i]))
+
 			# Get feature index
 			fid = feat_indices[i]
 
@@ -113,8 +114,7 @@ def build_stack_model():
 			# Prepare data
 			train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=validate, train_only=True)
 
-			# Normalized data have to be recomputed everytime as the training data is always different. Hence, we will 
-			# not be saving this normalized data
+			# Load Normalized data 
 			norm_std = os.path.join(processed_root_dir, fold_norm_stds[i][fold])
 			norm_mean = os.path.join(processed_root_dir, fold_norm_means[i][fold])
 
@@ -139,7 +139,7 @@ def build_stack_model():
 	print("Getting Prediction Results to fill in test_meta")
 
 	# For each model
-	for i in range(len(preprocessed_features)):
+	for i in range(len(save_models)):
 		# Get feature index
 		fid = feat_indices[i]
 		
@@ -179,11 +179,6 @@ def build_stack_model():
 	train_meta_labels = np.asarray(data_manager.train_label_indices)
 	test_meta_labels = np.asarray(data_manager.test_label_indices)
 
-	print(train_meta.shape)
-	print(test_meta.shape)
-	print(train_meta_labels.shape)
-	print(test_meta_labels.shape)
-
 	# Fit and Train classifier Model (step 5 & 6)
 	classifier = ClassifierModel(train_meta, train_meta_labels, test_meta, test_meta_labels)
 	predicts = classifier.run_decision_tree_classification()
@@ -201,7 +196,6 @@ def build_stack_model():
 
 	stacked_model_filepath = os.path.join(processed_root_dir, stacked_model_name)
 	classifier.save_model(stacked_model_filepath)
-
 
 
 def predict_with_stack_model():
@@ -237,8 +231,7 @@ def predict_with_stack_model():
 		data_manager.load_feature(fid, preprocessed_features_filepath)	# THIS HAVE TO BE REMOVED (BECAUSE WHEN PREDICTING, we won't have preprocess thea udio file as we don't know what it is. leave it balnk)
 
 		# Prepare data
-		test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
-		train_csv, test_csv = data_manager.prepare_data(train_indices=[], test_indices=test, train_only=False)
+		test_csv = data_manager.prepare_test_data()
 
 		# Get Normalized preprocessed data file
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])
@@ -262,8 +255,6 @@ def predict_with_stack_model():
 	# Load the stacked model
 	stacked_model_filepath = os.path.join(processed_root_dir, stacked_model_name)
 	stacked_em = pickle.load(open(stacked_model_filepath, 'rb'))
-
-	print(input_vect.shape)
 
 	# Get Prediction Results
 	predicts = stacked_em.predict(input_vect)
