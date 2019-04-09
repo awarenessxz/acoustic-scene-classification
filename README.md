@@ -1,16 +1,10 @@
-# CS4347 Acoustic Scene Classification
+## Acoustic Scene Classification
 
-This project is referenced from [CS4347_ASC_BaselineModel](https://github.com/ssrp/CS4347_ASC_GroupProject). The goal of acoustic scene classification is to classify a test recording into one of the provided predefined classes that characterizes the environment in which it was recorded.
+### Overview
 
-## Dataset
+The goal of acoustic scene classification is to classify a test recording into one of the provided predefined classes that characterizes the environment in which it was recorded. The baseline code of this project is referenced from (CS4347_ASC_BaselineModel)[https://github.com/ssrp/CS4347_ASC_GroupProject]
 
-You can access the training dataset on [this Google Drive Link](https://drive.google.com/drive/u/1/folders/1HaMgbk2Heszdj71b_6H20-J01Xh8M3u8). It is already divided into train and test sets. You can start downloading the dataset as it is about 10GB+.
-
-The dataset for this project is the TUT Urban Acoustic Scenes 2018 dataset, consisting of recordings from various acoustic scenes. The dataset was recorded in six large european cities, in different locations for each scene class. For each recording location there are 5-6 minutes of audio. The original recordings were split into segments with a length of 10 seconds that are provided in individual files. Available information about the recordings include the following: acoustic scene class (label).
-
-### Acoustic Scenes / Labels
-Acoustic scenes for the task (10):
-
+Acoustic scenes Classes/Labels:
 - Airport - airport
 - Indoor shopping mall - shopping_mall
 - Metro station - metro_station
@@ -22,45 +16,104 @@ Acoustic scenes for the task (10):
 - Travelling by an underground metro - metro
 - Urban park - park
 
-## GPU Access
-Once you download the dataset, you would need to set up your GPU Access. Please let us know if you need help with the GPU access (SoC NUS provides Sunfire cluster for this).
+### Dataset
 
-## Baseline Model
+You can access the training dataset on [this Google Drive Link](https://drive.google.com/drive/u/1/folders/1HaMgbk2Heszdj71b_6H20-J01Xh8M3u8). It is already divided into train and test sets. You can start downloading the dataset as it is about 10GB+.
 
-The baseline system provides a simple entry-level state-of-the-art approach that gives reasonable results. The baseline system is built on librosa toolbox written in PyTorch.
+The dataset for this project is the TUT Urban Acoustic Scenes 2018 dataset, consisting of recordings from various acoustic scenes. The dataset was recorded in six large european cities, in different locations for each scene class. For each recording location there are 5-6 minutes of audio. The original recordings were split into segments with a length of 10 seconds that are provided in individual files. Available information about the recordings include the following: acoustic scene class (label).
 
-Students are strongly encouraged to build their own systems by extending the provided baseline system. The system has all needed functionality for the dataset handling, acoustic feature storing and accessing, acoustic model training and storing, and evaluation. The modular structure of the system enables participants to modify the system to their needs. The baseline system is a good starting point especially for the entry level students interested in Deep Learning using PyTorch to familiarize themselves with the acoustic scene classification problem.
+### Environment Settings
+- Python 3.6.4
 
-### Model Structure
+### SCREEN COMMANDS
+- screen -S "session_name" --> create new screen
+- screen -R "session_name" --> Reattached to screen
+- screen -ls --> list all screen
+- echo $STY --> see whether you are inside a screen
+- ctrl a d --> detach from a screen
 
-The baseline system implements a convolutional neural network (CNN) based approach, where log mel-band energies are first extracted for each 10-second signal, and a network consisting of two CNN layers and one fully connected layer is trained to assign scene labels to the audio signals. Given below is the model structure:
+### Running the Individual CNN Model
 
-<p align = "center">
-<img src="baseline.png" width="600">
-</p>
+To run the code: `python baseline_PyTorch.py`. The program extracts different features from the audio file for training the cnn model. Change the global variables in the program to train the CNN model using different features (refer to Features configuration below)
 
-#### Parameters
-- Acoustic features
-  - Analysis frame 40 ms (50% hop size)
-  - Log mel-band energies (40 bands)
-- Network Structure
-  - Input shape: 40 * 500 (10 seconds)
-  - Architecture:
-    - CNN layer #1
-      - 2D Convolutional layer (filters: 32, kernel size: 7) + Batch normalization + ReLu activation
-      - 2D max pooling (pool size: (5, 5)) + Dropout (rate: 30%)
-    - CNN layer #2
-      - 2D Convolutional layer (filters: 64, kernel size: 7) + Batch normalization + ReLu activation
-      - 2D max pooling (pool size: (4, 100)) + Dropout (rate: 30%)
-    - Flatten
-    - Dense layer #1
-      - Dense layer (units: 100, activation: ReLu )
-      - Dropout (rate: 30%)
-    - Output layer (activation: softmax)
-  - Learning (epochs: 200, batch size: 16, data shuffling between epochs)
-    - Optimizer: Adam (learning rate: 0.001)
-  - Model selection:
-    - Model performance after each epoch is evaluated on the test set, and best performing model is selected.
+### Running the Ensemble Program
 
-### Baseline Results
-To be announced soon.
+To run the code: `python ensembleModel.py`
+
+There are two modes to this program right now. Building and Predicting. 
+
+* Building Mode: `python ensembleModel.py` or `python ensembleModel.py --em build`
+	* apply [meta ensembling technique](http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/) to train and combine all the CNN models into one model (stacked model)
+
+* Predicting Mode: `python ensembleModel.py --em predict`
+	* use the saved models to predict the labels
+
+### Features Configuration
+
+The program extracts different features from the audio file for training the cnn model. Hence, when adding new features, update the global variables in `ensembleModel.py`. The index of the arrays corresponds to the index of the features. Refer to the information below on features available
+
+0. Using Mono Audio Log Mel Spectrogram
+	- **feature_index = 0**
+	- num_of_channel = 1
+	- preprocessed_features = "mono_spec.npy"
+	- fold_norm_means = ["mono_mean_f0.npy", "mono_mean_f1.npy", "mono_mean_f2.npy", "mono_mean_f3.npy", "mono_mean_f4.npy"]
+	- fold_norm_stds = ["mono_stds_f0.npy", "mono_stds_f1.npy", "mono_stds_f2.npy", "mono_stds_f3.npy", "mono_stds_f4.npy"]
+	- norm_means = "mono_norm_mean.npy"   
+	- norm_stds = "mono_norm_std.npy"
+	- save_models = "mono_cnn.pt"
+
+1. Using Stereo Audio (Left Channel) Log Mel Spectrogram
+	- **feature_index = 1**
+	- num_of_channel = 1
+	- preprocessed_features = "left_spec.npy"
+	- fold_norm_means = ["left_mean_f0.npy", "left_mean_f1.npy", "left_mean_f2.npy", "left_mean_f3.npy", "left_mean_f4.npy"]
+	- fold_norm_stds = ["left_stds_f0.npy", "left_stds_f1.npy", "left_stds_f2.npy", "left_stds_f3.npy", "left_stds_f4.npy"]
+	- norm_means = "left_norm_mean.npy"   
+	- norm_stds = "left_norm_std.npy"
+	- save_models = "left_cnn.pt"
+
+2. Using Stereo Audio (Right Channel) Log Mel Spectrogram
+	- **feature_index = 2**
+	- num_of_channel = 1
+	- preprocessed_features = "right_spec.npy"
+	- fold_norm_means = ["right_mean_f0.npy", "right_mean_f1.npy", "right_mean_f2.npy", "right_mean_f3.npy", "right_mean_f4.npy"]
+	- fold_norm_stds = ["right_stds_f0.npy", "right_stds_f1.npy", "right_stds_f2.npy", "right_stds_f3.npy", "right_stds_f4.npy"]
+	- norm_means = "right_norm_mean.npy"   
+	- norm_stds = "right_norm_std.npy"
+	- save_models = "right_cnn.pt"
+
+3. Using Stereo Audio (both channel) Log Mel Spectrogram
+	- **feature_index = 3**
+	- num_of_channel = 2
+	- preprocessed_features = "LR_spec.npy"
+	- fold_norm_means = ["LR_mean_f0.npy", "LR_mean_f1.npy", "LR_mean_f2.npy", "LR_mean_f3.npy", "LR_mean_f4.npy"]
+	- fold_norm_stds = ["LR_stds_f0.npy", "LR_stds_f1.npy", "LR_stds_f2.npy", "LR_stds_f3.npy", "LR_stds_f4.npy"]
+	- norm_means = "LR_norm_mean.npy"   
+	- norm_stds = "LR_norm_std.npy"
+	- save_models = "LR_cnn.pt"
+
+4. Using Harmonic Percussive Source Seperation (HPSS) Log Mel Spectrogram
+
+
+5. Using HPSS with Mono Log Mel Spectrogram (3 channels)
+	- **feature_index = 5**
+	- num_of_channel = 3
+	- preprocessed_features = "3F_spec.npy"
+	- fold_norm_means = ["3F_mean_f0.npy", "3F_mean_f1.npy", "3F_mean_f2.npy", "3F_mean_f3.npy", "3F_mean_f4.npy"]
+	- fold_norm_stds = ["3F_stds_f0.npy", "3F_stds_f1.npy", "3F_stds_f2.npy", "3F_stds_f3.npy", "3F_stds_f4.npy"]
+	- norm_means = "3F_norm_mean.npy"   
+	- norm_stds = "3F_norm_std.npy"
+	- save_models = "3F_cnn.pt"
+
+
+
+
+
+
+
+
+
+
+
+
+
