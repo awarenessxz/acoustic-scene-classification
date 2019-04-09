@@ -246,8 +246,7 @@ def predict_with_stack_model():
 
 		# Fill up the input_vector with predictions results from model
 		for j in range(data_manager.get_test_data_size()):
-			v_idx = test[j]
-			input_vect[v_idx][i] = predictions[j]
+			input_vect[j][i] = predictions[j]
 
 
 	# 3. Get Prediction Results from Stack Model based on input_vector  ####################################################
