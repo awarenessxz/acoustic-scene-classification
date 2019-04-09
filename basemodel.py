@@ -209,7 +209,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
 		#print("MODEL: %s" % saved_model_name)
-		loghub.logMsg(name=__name__, msg="MODEL: {}".format(saved_model_name), otherfile="test_acc", level="info")
+		loghub.logMsg(name=__name__, msg="EPOCH {} - MODEL: {}".format(epoch, saved_model_name), otherfile="test_acc", level="info")
 		cnn.test(args, model, device, valid_loader, "Validation Data")
 		#cnn.test(args, model, device, train_loader, 'Training Data')
 		#cnn.test(args, model, device, test_loader, 'Testing Data')
