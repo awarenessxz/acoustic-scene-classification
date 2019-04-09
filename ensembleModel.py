@@ -10,6 +10,7 @@ import numpy as np
 import pickle
 
 # Import own modules
+import loghub
 import basemodel as bm
 import utility as util
 from dataset import DatasetManager
@@ -51,6 +52,10 @@ save_models = ["left_cnn.pt", "right_cnn.pt", "3F_cnn.pt"]
 # Ensemble Model Parameters
 stacked_model_name = "stackedModel1.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
+
+# Logging Files
+main_log = "log_main.log"
+test_accu_log = "log_test_accu.log"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -95,14 +100,17 @@ def build_stack_model():
 	# 3. Apply K-fold cross validation to fill up empty columns (M1, M2, .... Mn) of train_meta with prediction results for each folds ##############################
 
 
-	print("Getting Prediction Results to fill in train_meta")
+	#print("Getting Prediction Results to fill in train_meta")
+	loghub.logMsg(name=__name__, msg="Getting Prediction Results to fill in train_meta", otherfile="test_acc", level="info")
 	fold = 0		# fold counter
 	for train, validate in kfolds:										# train, validate is a list of index
-		print("Cross Validation Fold #%i..." % (fold+1))
+		#print("Cross Validation Fold #%i..." % (fold+1))
+		loghub.logMsg(name=__name__, msg="Cross Validation Fold #{}...".format((fold+1)), otherfile="test_acc", level="info")
 
 		# For each model
 		for i in range(len(preprocessed_features)):	
-			print("Fold #%i for model (%s)..." % ((fold+1), save_models[i]))
+			#print("Fold #%i for model (%s)..." % ((fold+1), save_models[i]))
+			loghub.logMsg(name=__name__, msg="Fold #{} for model ({})...".format((fold+1), save_models[i]), otherfile="test_acc", level="info")
 
 			# Get feature index
 			fid = feat_indices[i]
@@ -127,16 +135,19 @@ def build_stack_model():
 				v_idx = validate[j]
 				train_meta[v_idx][i] = predictions[j]
 
-		print("End of Fold #%i." % (fold+1))
+		#print("End of Fold #%i." % (fold+1))
+		loghub.logMsg(name=__name__, msg="End of Fold #{}".format((fold+1)), otherfile="test_acc", level="info")
 		fold += 1
 
-	print("Train_meta generated successfully.")
+	#print("Train_meta generated successfully.")
+	loghub.logMsg(name=__name__, msg="Train_meta generated successfully.", otherfile="test_acc", level="info")
 
 
 	# 4. Fit each model to the full training dataset & make predictions on the test dataset, store into test_meta ##############################
 
 
-	print("Getting Prediction Results to fill in test_meta")
+	#print("Getting Prediction Results to fill in test_meta...")
+	loghub.logMsg(name=__name__, msg="Getting Prediction Results to fill in test_meta...", otherfile="test_acc", level="info")
 
 	# For each model
 	for i in range(len(save_models)):
@@ -169,6 +180,7 @@ def build_stack_model():
 			test_meta[v_idx][i] = predictions[j]
 
 	print("Test_meta generated successfully.")
+	loghub.logMsg(name=__name__, msg="Test_meta generated successfully.", otherfile="test_acc", level="info")
 
 
 	# 5. Fit (stacking model S) to train_meta, using (M1, M2, ... Mn) as features. ############################################################
@@ -188,8 +200,10 @@ def build_stack_model():
 	correct, total = classifier.get_accuracy(predicts)
 	percentage = 100 * correct / total
 	
-	print("Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
-		correct, total, percentage, precision, recall, f1_measure))
+	#print("Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
+	#	correct, total, percentage, precision, recall, f1_measure))
+	loghub.logMsg(name=__name__, msg="Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
+		correct, total, percentage, precision, recall, f1_measure), otherfile="test_acc", level="info")
 
 	# 7. Save the ensemble model ########################################################################################################################
 
@@ -261,7 +275,9 @@ def predict_with_stack_model():
 	# Print prediction Accuracy
 	correct, total = util.compare_list_elements(predicts, data_manager.test_label_indices)
 	percentage = 100 * correct / total
-	print("Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(correct, total, percentage))
+	#print("Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(correct, total, percentage))
+	loghub.logMsg(name=__name__, msg="Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(
+		correct, total, percentage), otherfile="test_acc", level="info")
 
 
 def process_arguments(parser):
@@ -300,19 +316,30 @@ if __name__ == '__main__':
 	parser.add_argument("--ename", help="Stacked Model name (eg. stackedModel.sav)")
 	process_arguments(parser)
 
-	# 2. Run Ensemble Learning 
+	# 2. Set up logging
+	loghub.init(os.path.join("log", main_log))
+	loghub.setup_logger("test_acc", os.path.join("log", test_accu_log))
+
+	# 3. Run Ensemble Learning 
 	if ensemble_mode == 0:
-		print("Building Stacked Ensemble Model (Meta Ensembling)...")
+		#print("Building Stacked Ensemble Model (Meta Ensembling)...")
+		loghub.logMsg(name=__name__, msg="Building Stacked Ensemble Model (Meta Ensembling)...", otherfile="test_acc", level="info")
 		build_stack_model()
 	elif ensemble_mode == 1:
-		print("Testing Stacked Ensemble Model...")
+		#print("Testing Stacked Ensemble Model...")
+		loghub.logMsg(name=__name__, msg="Testing Stacked Ensemble Model...", otherfile="test_acc", level="info")
 		predict_with_stack_model()
 	else:
-		print("Nothing yet...")
+		#print("Nothing yet...")
+		loghub.logMsg(name=__name__, msg="Nothing yet...", level="error")
+
 
 	# 3. End Timer
 	timer.stopTimer()
-	timer.printElapsedTime()
+	time_taken = timer.getElapsedTime()
+	loghub.logMsg(name=__name__, msg="Total time taken: {}".format(time_taken), otherfile="test_acc", level="info")
+
+
 
 
 
