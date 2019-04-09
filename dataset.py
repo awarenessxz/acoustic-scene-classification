@@ -13,6 +13,7 @@ import librosa
 
 # import our own tools
 import audiopro as ap
+import loghub
 
 class DatasetManager():
 	"""
@@ -68,7 +69,8 @@ class DatasetManager():
 		"""
 
 		# Read the training & testing data from the csv file
-		print("Loading all data...")
+		#print("Loading all data...")
+		loghub.logMsg(name=__name__, msg="Loading all data...", otherfile="test_acc", level="info")
 		self.train_data_list, self.train_label_list, self.train_label_indices = self.__read_DCASE_csv_file(self.train_csv_filepath, "train")
 		self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "test")
 		self.audio_files = self.train_data_list + self.test_data_list
@@ -77,7 +79,8 @@ class DatasetManager():
 		self.data_type = [0] * len(self.train_data_list) + [1] * len(self.test_data_list)
 
 		self.data_type = np.asarray(self.data_type)
-		print("All data loaded.")	
+		#print("All data loaded.")	
+		loghub.logMsg(name=__name__, msg="All data loaded.", otherfile="test_acc", level="info")
 
 	def load_feature(self, feature_index, filename):
 		"""
@@ -89,11 +92,13 @@ class DatasetManager():
 
 		# check that data have been loaded
 		if not self.audio_files:
-			print("Data have not been loaded. Running data_manager.load_all_data()...")
+			#print("Data have not been loaded. Running data_manager.load_all_data()...")
+			loghub.logMsg(name=__name__, msg="Data have not been loaded. Running data_manager.load_all_data()...", level="warning")
 			self.load_all_data()
 
 		# Extract features
-		print("Loading/Extracting feature %i from audio files..." % feature_index)
+		#print("Loading/Extracting feature %i from audio files..." % feature_index)
+		loghub.logMsg(name=__name__, msg="Loading/Extracting feature {} from audio files...".format(feature_index), otherfile="test_acc", level="info")	
 
 		if os.path.isfile(filename):
 			# file already exists
@@ -130,7 +135,8 @@ class DatasetManager():
 			mel_specs = np.asarray(mel_specs)
 			self.audio_data = mel_specs
 
-		print("Feature %i extracted." % feature_index)
+		#print("Feature %i extracted." % feature_index)
+		loghub.logMsg(name=__name__, msg="Feature {} extracted.".format(feature_index), otherfile="test_acc", level="info")	
 
 	def apply_k_fold(self, K=5):
 		"""
@@ -144,7 +150,8 @@ class DatasetManager():
 		
 		# check that data have been loaded
 		if not self.train_data_list:
-			print("Data have not been loaded. Running data_manager.load_all_data()...")
+			#print("Data have not been loaded. Running data_manager.load_all_data()...")
+			loghub.logMsg(name=__name__, msg="Data have not been loaded. Running data_manager.load_all_data()...", level="warning")
 			self.load_all_data()
 
 		# Initialize array
@@ -204,7 +211,8 @@ class DatasetManager():
 			writer.writerows(test_csv_data)
 		csvFile.close()
 
-		print("Test Data Labels generated in %s (test)" % test_filepath)
+		#print("Test Data Labels generated in %s (test)" % test_filepath)
+		loghub.logMsg(name=__name__, msg="Test Data Labels generated in {} (test)".format(test_filepath), otherfile="test_acc", level="info")
 
 		return test_filepath
 
@@ -224,7 +232,8 @@ class DatasetManager():
 			the features in the audio files whenever the train/test data changes
 		"""
 
-		print("Generating train.csv and test.csv for building model...")
+		#print("Generating train.csv and test.csv for building model...")
+		loghub.logMsg(name=__name__, msg="Generating train.csv and test.csv for building model...", otherfile="test_acc", level="info")
 
 		self.train_idx_map = []
 		self.test_idx_map = []
@@ -287,7 +296,8 @@ class DatasetManager():
 			writer.writerows(test_csv_data)
 		csvFile.close()
 
-		print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
+		#print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
+		loghub.logMsg(name=__name__, msg="Data labels generated in {} (train) and {} (test)".format(train_filepath, test_filepath), otherfile="test_acc", level="info")
 
 		return train_filepath, test_filepath
 
@@ -305,17 +315,12 @@ class DatasetManager():
 		else:
 			# Mapping is not empty
 			if data_type == "train":
-				if idx >= len(self.train_idx_map):
-					print("Index out of size: %i" % idx)
-
 				return self.train_idx_map[idx]
 			elif data_type == "test":
-				if idx >= len(self.test_idx_map):
-					print("Index out of size: %i" % idx)
-
 				return self.test_idx_map[idx]
 			else:
-				print("Error! Invalid data type")
+				#print("Error! Invalid data type")
+				loghub.logMsg(name=__name__, msg="Error! Invalid data type", level="error")
 				return
 
 	def split_into_classes(self):
