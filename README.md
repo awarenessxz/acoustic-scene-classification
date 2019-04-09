@@ -55,6 +55,8 @@ There are two modes to this program right now. Building and Predicting.
 * Predicting Mode: `python ensembleModel.py --em predict`
 	* use the saved models to predict the labels
 
+**NOTE: If you are running multiple instances of this program, ensure that the variables `temp_test_csv_file` and `temp_train_csv_file` are different as these file will be overwritten**
+
 ### Features Configuration
 
 The program extracts different features from the audio file for training the cnn model. Hence, when adding new features, update the global variables in `ensembleModel.py`. The index of the arrays corresponds to the index of the features. Refer to the information below on features available

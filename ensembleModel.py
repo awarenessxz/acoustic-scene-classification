@@ -25,37 +25,39 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [1, 2, 5]
+feat_indices = [0, 3]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["left_spec.npy", "right_spec.npy", "3F_spec.npy"] 
-num_of_channels = [1, 1, 3]		
+preprocessed_features = ["mono_spec.npy", "LR_spec.npy"] 
+num_of_channels = [1, 2]		
 
 # These are for step 3. Cross validation of training data to generate train_meta
 K_FOLD = 5
 fold_norm_means = [
-	["left_mean_f0.npy", "left_mean_f1.npy", "left_mean_f2.npy", "left_mean_f3.npy", "left_mean_f4.npy"],
-	["right_mean_f0.npy", "right_mean_f1.npy", "right_mean_f2.npy", "right_mean_f3.npy", "right_mean_f4.npy"],
-	["3F_mean_f0.npy", "3F_mean_f1.npy", "3F_mean_f2.npy", "3F_mean_f3.npy", "3F_mean_f4.npy"],
+	["mono_mean_f0.npy", "mono_mean_f1.npy", "mono_mean_f2.npy", "mono_mean_f3.npy", "mono_mean_f4.npy"],
+	["LR_mean_f0.npy", "LR_mean_f1.npy", "LR_mean_f2.npy", "LR_mean_f3.npy", "LR_mean_f4.npy"],
 ]
 fold_norm_stds = [
-	["left_stds_f0.npy", "left_stds_f1.npy", "left_stds_f2.npy", "left_stds_f3.npy", "left_stds_f4.npy"],
-	["right_stds_f0.npy", "right_stds_f1.npy", "right_stds_f2.npy", "right_stds_f3.npy", "right_stds_f4.npy"],
-	["3F_stds_f0.npy", "3F_stds_f1.npy", "3F_stds_f2.npy", "3F_stds_f3.npy", "3F_stds_f4.npy"],
+	["mono_stds_f0.npy", "mono_stds_f1.npy", "mono_stds_f2.npy", "mono_stds_f3.npy", "mono_stds_f4.npy"],
+	["LR_stds_f0.npy", "LR_stds_f1.npy", "LR_stds_f2.npy", "LR_stds_f3.npy", "LR_stds_f4.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["left_norm_mean.npy", "right_norm_std.npy", "3F_norm_mean.npy"]
-norm_stds = ["left_norm_std.npy", "right_norm_std.npy", "3F_norm_std.npy"]
-save_models = ["left_cnn.pt", "right_cnn.pt", "3F_cnn.pt"]
+norm_means = ["mono_norm_mean.npy", "LR_norm_std.npy"]
+norm_stds = ["mono_norm_std.npy", "LR_norm_std.npy"]
+save_models = ["mono_cnn.pt", "LR_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel1.pkl"
+stacked_model_name = "stackedModel.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
 main_log = "log_main.log"
 test_accu_log = "log_test_accu.log"
+
+# Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
+temp_test_csv_file = "test_dataset.csv"
+temp_train_csv_file = "train_dataset.csv"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +122,8 @@ def build_stack_model():
 			data_manager.load_feature(fid, preprocessed_features_filepath)
 
 			# Prepare data
-			train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=validate, train_only=True)
+			train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=validate, 
+				train_csv=temp_train_csv_file, test_csv=temp_test_csv_file, train_only=True)
 
 			# Load Normalized data 
 			norm_std = os.path.join(processed_root_dir, fold_norm_stds[i][fold])
@@ -161,7 +164,8 @@ def build_stack_model():
 		# Prepare data
 		train = np.arange(data_manager.get_train_data_size())		# Train indices = all of train data
 		test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
-		train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=test, train_only=False)
+		train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=test, 
+			train_csv=temp_train_csv_file, test_csv=temp_test_csv_file, train_only=False)
 
 		# Get Normalized preprocessed data file
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])
@@ -245,7 +249,7 @@ def predict_with_stack_model():
 		data_manager.load_feature(fid, preprocessed_features_filepath)	# THIS HAVE TO BE REMOVED (BECAUSE WHEN PREDICTING, we won't have preprocess thea udio file as we don't know what it is. leave it balnk)
 
 		# Prepare data
-		test_csv = data_manager.prepare_test_data()
+		test_csv = data_manager.prepare_test_data(test_csv=temp_test_csv_file,)
 
 		# Get Normalized preprocessed data file
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])
