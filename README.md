@@ -24,6 +24,13 @@ The dataset for this project is the TUT Urban Acoustic Scenes 2018 dataset, cons
 
 ### Environment Settings
 - Python 3.6.4
+- torchvision
+- torch
+- numpy
+- scipy
+- pickle
+
+Ensure that the above packages are installed. Also ensure that there exists `log` and `processed_data` directories. 
 
 ### SCREEN COMMANDS
 - screen -S "session_name" --> create new screen
@@ -47,6 +54,8 @@ There are two modes to this program right now. Building and Predicting.
 
 * Predicting Mode: `python ensembleModel.py --em predict`
 	* use the saved models to predict the labels
+
+**NOTE: If you are running multiple instances of this program, ensure that the variables `temp_test_csv_file` and `temp_train_csv_file` are different as these file will be overwritten**
 
 ### Features Configuration
 

@@ -9,6 +9,9 @@ import numpy as np
 import torch.nn.functional as F
 import torch.nn as nn
 
+# import own modules
+import loghub
+
 '''
 ////////////////////////////////////////////////////////////////////////////////////
 ///			Transpose / Normalization Functions									////
@@ -136,9 +139,12 @@ def train(args, model, device, train_loader, optimizer, epoch):
 
 		# Printing the results
 		if batch_idx % args.log_interval == 0:
-			print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+			#print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+			#	epoch, batch_idx * len(data), len(train_loader.dataset),
+			#	100. * batch_idx / len(train_loader), loss.item()))
+			loghub.logMsg(name=__name__, msg="Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
 				epoch, batch_idx * len(data), len(train_loader.dataset),
-				100. * batch_idx / len(train_loader), loss.item()))
+				100. * batch_idx / len(train_loader), loss.item()), level="info")
 
 def test(args, model, device, test_loader, data_type):
 
@@ -149,7 +155,8 @@ def test(args, model, device, test_loader, data_type):
 	test_loss = 0
 	correct = 0
 	pred_results = np.asarray([])
-	print('Testing..')
+	#print('Testing..')
+	loghub.logMsg(name=__name__, msg="Testing...", otherfile="test_acc", level="info")
 
 	# Use no gradient backpropagations (as we are just testing)
 	with torch.no_grad():
@@ -183,9 +190,12 @@ def test(args, model, device, test_loader, data_type):
 	test_loss /= len(test_loader.dataset)
 
 	# print the results
-	print('Model prediction on ' + data_type + ': Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-		test_loss, correct, len(test_loader.dataset),
-		100. * correct / len(test_loader.dataset)))
+	#print('Model prediction on ' + data_type + ': Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+	#	test_loss, correct, len(test_loader.dataset),
+	#	100. * correct / len(test_loader.dataset)))
+	loghub.logMsg(name=__name__, msg="Model prediction on {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+		data_type, test_loss, correct, len(test_loader.dataset),
+		100. * correct / len(test_loader.dataset)), otherfile="test_acc", level="info")
 
 	return pred_results
 

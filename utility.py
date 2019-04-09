@@ -116,6 +116,10 @@ class StopWatch:
 			print("Total time taken in seconds: %f s" % time_taken)
 			print("Total time taken: %s" % str(datetime.timedelta(seconds=time_taken)))
 
+	def getElapsedTime(self):
+		time_taken = self.end - self.start
+		return str(datetime.timedelta(seconds=time_taken))
+
 
 
 
