@@ -15,6 +15,7 @@ from torchvision import transforms, utils
 from torch.utils.data import DataLoader
 
 # import our own tools
+import loghub
 import cnnmodel as cnn
 from cnnmodel import BaselineASC
 from dataset import DCASEDataset, DatasetManager
@@ -29,16 +30,21 @@ from utility import StopWatch
 # Set the parameters below depending on the features to be extracted
 num_of_channel = 1
 feature_index = 0									# determine which feature to extract
-preprocessed_features = "mono_spec.npy"
-preprocessed_norm_mean_file = "mono_norm_mean.npy"
-preprocessed_norm_std_file = "mono_norm_std.npy"
-saved_model = "mono_BaselineASC.pt"
+preprocessed_features = "processed_data/mono_spec.npy"
+preprocessed_norm_mean_file = "processed_data/mono_norm_mean.npy"
+preprocessed_norm_std_file = "processed_data/mono_norm_std.npy"
+saved_model = "processed_data/mono_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
 	# 4 = hpss spectrogram (2 channel)
 	# 5 = 3f spectrogram (3 channel)
+temp_train_csv_file = "cnn_train_dataset.csv"
+temp_test_csv_file = "cnn_test_dataset.csv"
+
+log_file = "cnn_main.log"
+log_test = "cnn_test.log"
 
 
 '''
@@ -132,12 +138,11 @@ def main():
 	data_manager.load_feature(feature_index, preprocessed_features)
 
 	# Prepare data
-	train = np.arange(data_manager.get_train_data_size())		# Train indices = all of train data
-	test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
-	train_labels_dir, test_labels_dir = data_manager.prepare_data(train_indices=train, test_indices=test, train_only=False)
+	train_labels_dir, test_labels_dir = data_manager.prepare_data(train_csv=temp_train_csv_file, test_csv=temp_test_csv_file)
 
 
 	# Step 1b: Preparing Data - Transform Data #########################################################
+
 
 	# Compute Normalization score
 	if os.path.isfile(preprocessed_norm_mean_file) and os.path.isfile(preprocessed_norm_std_file):
@@ -201,17 +206,20 @@ def main():
 	# Step 3: Train Model ###############################################################
 
 
-	print('MODEL TRAINING START')
+	#print('MODEL TRAINING START')
+	loghub.logMsg(name=__name__, msg="MODEL TRAINING START.", otherfile="test_acc", level="info")
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
 		cnn.test(args, model, device, train_loader, 'Training Data')		
 		cnn.test(args, model, device, test_loader, 'Test Data')			
 
-	print('MODEL TRAINING END')
+	#print('MODEL TRAINING END')
+	loghub.logMsg(name=__name__, msg="MODEL TRAINING END.", otherfile="test_acc", level="info")
 
 
 	# Step 4: Save Model ################################################################
+
 
 	# save the model
 	if (args.save_model):
@@ -223,5 +231,8 @@ def main():
 
 		
 if __name__ == '__main__':
+	loghub.init(os.path.join("log", log_file))
+	loghub.setup_logger("test_acc", os.path.join("log", log_file))
+
 	# create a separate main function because original main function is too mainstream
 	main()

@@ -180,7 +180,7 @@ class DatasetManager():
 			for j in range(K):
 				if i == j:
 					continue
-				train_indices += kfolds_arr[i]
+				train_indices += kfolds_arr[j]
 
 			kfolds.append((train_indices, test_indices))
 
@@ -217,7 +217,7 @@ class DatasetManager():
 		return test_filepath
 
 
-	def prepare_data(self, train_indices, test_indices, train_only, train_csv="train_dataset.csv", test_csv="test_dataset.csv"):
+	def prepare_data(self, train_indices=None, test_indices=None, train_only=False, train_csv="train_dataset.csv", test_csv="test_dataset.csv"):
 		"""
 			train_indices (array of index): indices of all training audio files
 			test_indices (array of index): indicies of all testing audio files
@@ -237,6 +237,12 @@ class DatasetManager():
 
 		self.train_idx_map = []
 		self.test_idx_map = []
+
+		if train_indices == None and test_indices == None:
+			# using the original indices order
+			train_indices = np.arange(self.get_train_data_size())	# Train indices = all of train data
+			test_indices = np.arange(self.get_test_data_size())		# Test indices = all of test data
+
 
 		# Extract data for train.csv
 		train_csv_data = []
@@ -333,7 +339,7 @@ class DatasetManager():
 		label_indices = [[],[],[],[],[],[],[],[],[],[]]	
 
 		for i in range(len(self.audio_label_indices)):
-			class_index = self.audio_label_indices[i]
+			class_index = int(self.audio_label_indices[i])
 
 			data_list[class_index].append(self.audio_files[i])
 			label_list[class_index].append(self.audio_labels[i])

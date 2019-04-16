@@ -29,6 +29,7 @@ feat_indices = [0, 3]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
 preprocessed_features = ["mono_spec.npy", "LR_spec.npy"] 
+preprocessed_features_test = ["mono_spec_test.npy", "LR_spec_test.npy"]
 num_of_channels = [1, 2]		
 
 # These are for step 3. Cross validation of training data to generate train_meta
@@ -89,7 +90,7 @@ def build_stack_model():
 	# 1. Partition Training Data into K folds #############################################################################
 
 
-	kfolds = data_manager.apply_k_fold()
+	kfolds = data_manager.apply_k_fold(K_FOLD)
 
 
 	# 2. Create 2 dataset (train_meta & test_meta) with n empty columsn (M1, M2, ... Mn) where n = number of models ##############################
@@ -131,7 +132,7 @@ def build_stack_model():
 
 			# Build Model & get prediction results
 			model, predictions = bm.buildCNNModel(train_csv=train_csv, test_csv=test_csv, norm_std=norm_std, norm_mean=norm_mean, 
-							data_manager=data_manager, num_of_channel=num_of_channels[i], save_model=False)
+							data_manager=data_manager, num_of_channel=num_of_channels[i], split_valid=True, save_model=False)
 
 			# Fill up the train_meta with predictions results of test.csv
 			for j in range(len(validate)):
@@ -162,10 +163,7 @@ def build_stack_model():
 		data_manager.load_feature(fid, preprocessed_features_filepath)
 
 		# Prepare data
-		train = np.arange(data_manager.get_train_data_size())		# Train indices = all of train data
-		test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
-		train_csv, test_csv = data_manager.prepare_data(train_indices=train, test_indices=test, 
-			train_csv=temp_train_csv_file, test_csv=temp_test_csv_file, train_only=False)
+		train_csv, test_csv = data_manager.prepare_data( train_csv=temp_train_csv_file, test_csv=temp_test_csv_file)
 
 		# Get Normalized preprocessed data file
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])
@@ -245,11 +243,11 @@ def predict_with_stack_model():
 		fid = feat_indices[i]
 
 		# Preprocess Feature for model
-		preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features[i])
+		preprocessed_features_filepath = os.path.join(processed_root_dir, preprocessed_features_test[i])
 		data_manager.load_feature(fid, preprocessed_features_filepath)	# THIS HAVE TO BE REMOVED (BECAUSE WHEN PREDICTING, we won't have preprocess thea udio file as we don't know what it is. leave it balnk)
 
 		# Prepare data
-		test_csv = data_manager.prepare_test_data(test_csv=temp_test_csv_file,)
+		test_csv = data_manager.prepare_test_data(test_csv=temp_test_csv_file)
 
 		# Get Normalized preprocessed data file
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])

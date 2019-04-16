@@ -61,7 +61,7 @@ def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 
 	return mean, std
 
-def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of_channel, saved_model_name="",
+def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of_channel, split_valid=False, saved_model_name="",
 	test_batch_size=16, batch_size=16, epochs=200, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
 	"""
 		Build and Train CNN model
@@ -73,6 +73,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 			norm_mean (string): file that contains the normalized mean 
 			data_manager (DataManager): contains all the loaded train/test dataset
 			num_of_channel (int): number of channels for input features
+			split_valid (bool): True = split train data into train/validate, False = use test data as validate data
 			saved_model (string): name to use when saving
 
 		Optional Parameters
@@ -165,29 +166,39 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 	# Step 1c: Preparing Data - Load Data ###############################################################
 
 
-	# Split Train data into train/validate data
-	valid_ratio = 0.2
-	num_train_data = len(dcase_dataset)
-	indices = list(range(num_train_data))
-	split = int(np.floor(valid_ratio * num_train_data))
-	np.random.shuffle(indices)
-	train_idx, valid_idx = indices[split:], indices[:split]
-	# Initialize Random Sampler
-	train_sampler = SubsetRandomSampler(train_idx)
-	valid_sampler = SubsetRandomSampler(valid_idx)
-
 	# set number of cpu workers in parallel
 	kwargs = {'num_workers': 16, 'pin_memory': True} if use_cuda else {}
 
 	# get the training and testing data loader
 	train_loader = torch.utils.data.DataLoader(dcase_dataset,
-			batch_size=args.batch_size, sampler=train_sampler, **kwargs)
+			batch_size=args.batch_size, shuffle=True, **kwargs)
 
 	valid_loader = torch.utils.data.DataLoader(dcase_dataset,
-			batch_size=args.batch_size, sampler=valid_sampler, **kwargs)
+			batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 	test_loader = torch.utils.data.DataLoader(dcase_dataset_test,
 			batch_size=args.test_batch_size, shuffle=False, **kwargs)
+
+	# Update data loader
+	if split_valid:
+		# Split Train data into train/validate data
+		valid_ratio = 0.2
+		num_train_data = len(dcase_dataset)
+		indices = list(range(num_train_data))
+		split = int(np.floor(valid_ratio * num_train_data))
+		np.random.shuffle(indices)
+		train_idx, valid_idx = indices[split:], indices[:split]
+		# Initialize Random Sampler
+		train_sampler = SubsetRandomSampler(train_idx)
+		valid_sampler = SubsetRandomSampler(valid_idx)
+
+		# get the training and testing data loader
+		train_loader = torch.utils.data.DataLoader(dcase_dataset,
+				batch_size=args.batch_size, sampler=train_sampler, **kwargs)
+
+		valid_loader = torch.utils.data.DataLoader(dcase_dataset,
+				batch_size=args.test_batch_size, sampler=valid_sampler, **kwargs)
+
 
 
 	# Step 2: Build Model ###############################################################
