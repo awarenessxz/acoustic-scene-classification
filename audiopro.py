@@ -153,6 +153,48 @@ def extract_zero_crossing_for_mono_channel(wav_name):
 	zero_crossing = np.reshape(zero_crossing, [1, zero_crossing.shape[0], zero_crossing.shape[1]])
 	return zero_crossing
 
+def extract_mel_spectrogram_for_left_right_difference_channel(wav_name):
+	# load the wav file with 22.05 KHz Sampling rate and only one channel
+	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
+	
+	audio = audio[0] - audio[1]
+
+	# extract mel-spectrograms, number of mel-bins=40
+	spec = librosa.feature.melspectrogram(y=audio, 
+											sr=sr, # mention the same sampling rate
+											n_fft=883, # Number of FFT bins (Window-size: 0.04s)
+											hop_length=441, # Hop size (50% overlap)
+											n_mels=40) # Number of mel-bins in the output spectrogram
+
+	# perform the logarithm transform, which makes the spectrograms look better, visually (hence better for the CNNs to extract features) 
+	logmel = librosa.core.amplitude_to_db(spec)
+
+	# add an extra column for the audio channel
+	logmel = np.reshape(logmel, [1, logmel.shape[0], logmel.shape[1]])
+
+	return logmel
+
+def extract_mel_spectrogram_for_left_right_sum_channel(wav_name):
+	# load the wav file with 22.05 KHz Sampling rate and only one channel
+	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
+	
+	audio = audio[0] + audio[1]
+
+	# extract mel-spectrograms, number of mel-bins=40
+	spec = librosa.feature.melspectrogram(y=audio, 
+											sr=sr, # mention the same sampling rate
+											n_fft=883, # Number of FFT bins (Window-size: 0.04s)
+											hop_length=441, # Hop size (50% overlap)
+											n_mels=40) # Number of mel-bins in the output spectrogram
+
+	# perform the logarithm transform, which makes the spectrograms look better, visually (hence better for the CNNs to extract features) 
+	logmel = librosa.core.amplitude_to_db(spec)
+
+	# add an extra column for the audio channel
+	logmel = np.reshape(logmel, [1, logmel.shape[0], logmel.shape[1]])
+
+	return logmel
+
 
 
 

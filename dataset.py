@@ -128,6 +128,10 @@ class DatasetManager():
 					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
 				elif feature_index == 8:
 					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
+				elif feature_index == 9:
+					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
+				elif feature_index == 10:
+					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
 
 			if filename:
 				np.save(filename, mel_specs)

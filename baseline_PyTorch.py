@@ -29,22 +29,22 @@ from utility import StopWatch
 
 # Set the parameters below depending on the features to be extracted
 num_of_channel = 1
-feature_index = 0									# determine which feature to extract
-preprocessed_features = "processed_data/mono_spec.npy"
-preprocessed_norm_mean_file = "processed_data/mono_norm_mean.npy"
-preprocessed_norm_std_file = "processed_data/mono_norm_std.npy"
-saved_model = "processed_data/mono_BaselineASC.pt"
+feature_index = 10									# determine which feature to extract
+preprocessed_features = "processed_data/sum_spec.npy"
+preprocessed_norm_mean_file = "processed_data/sum_norm_mean.npy"
+preprocessed_norm_std_file = "processed_data/sum_norm_std.npy"
+saved_model = "processed_data/sum_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
 	# 4 = hpss spectrogram (2 channel)
 	# 5 = 3f spectrogram (3 channel)
-temp_train_csv_file = "cnn_train_dataset.csv"
-temp_test_csv_file = "cnn_test_dataset.csv"
+temp_train_csv_file = "cnn_train_dataset5.csv"
+temp_test_csv_file = "cnn_test_dataset5.csv"
 
-log_file = "cnn_main.log"
-log_test = "cnn_test.log"
+log_file = "cnn_main5.log"
+log_test = "cnn_test5.log"
 
 
 '''

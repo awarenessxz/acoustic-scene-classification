@@ -33,14 +33,14 @@ preprocessed_features_test = ["mono_spec_test.npy", "LR_spec_test.npy"]
 num_of_channels = [1, 2]		
 
 # These are for step 3. Cross validation of training data to generate train_meta
-K_FOLD = 5
+K_FOLD = 3
 fold_norm_means = [
-	["mono_mean_f0.npy", "mono_mean_f1.npy", "mono_mean_f2.npy", "mono_mean_f3.npy", "mono_mean_f4.npy"],
-	["LR_mean_f0.npy", "LR_mean_f1.npy", "LR_mean_f2.npy", "LR_mean_f3.npy", "LR_mean_f4.npy"],
+	["mono_mean_k0.npy", "mono_mean_k1.npy", "mono_mean_k2.npy"],
+	["LR_mean_k0.npy", "LR_mean_k1.npy", "LR_mean_k2.npy"],
 ]
 fold_norm_stds = [
-	["mono_stds_f0.npy", "mono_stds_f1.npy", "mono_stds_f2.npy", "mono_stds_f3.npy", "mono_stds_f4.npy"],
-	["LR_stds_f0.npy", "LR_stds_f1.npy", "LR_stds_f2.npy", "LR_stds_f3.npy", "LR_stds_f4.npy"],
+	["mono_stds_k0.npy", "mono_stds_k1.npy", "mono_stds_k2.npy"],
+	["LR_stds_k0.npy", "LR_stds_k1.npy", "LR_stds_k2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
