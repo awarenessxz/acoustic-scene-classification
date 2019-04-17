@@ -63,7 +63,7 @@ class DatasetManager():
 	def get_test_data_size(self):
 		return len(self.test_data_list)
 
-	def load_all_data(self):
+	def load_all_data(self, include_test=False):
 		"""
 			load all data, extract the features and save as filename
 		"""
@@ -77,6 +77,12 @@ class DatasetManager():
 		self.audio_labels = self.train_label_list + self.test_label_list
 		self.audio_label_indices = self.train_label_indices + self.test_label_indices
 		self.data_type = [0] * len(self.train_data_list) + [1] * len(self.test_data_list)
+
+		self.base = len(self.train_data_list)
+		if include_test:
+			self.train_data_list = self.train_data_list + self.test_data_list
+			self.train_label_list = self.train_label_list + self.test_label_list
+			self.train_label_indices = self.train_label_indices + self.test_label_indices
 
 		self.data_type = np.asarray(self.data_type)
 		#print("All data loaded.")	
@@ -251,7 +257,6 @@ class DatasetManager():
 			train_indices = np.arange(self.get_train_data_size())	# Train indices = all of train data
 			test_indices = np.arange(self.get_test_data_size())		# Test indices = all of test data
 
-
 		# Extract data for train.csv
 		train_csv_data = []
 		for i in range(len(train_indices)):
@@ -268,7 +273,7 @@ class DatasetManager():
 
 		# Extract data for test.csv
 		test_csv_data = []
-		base = self.get_train_data_size()			# main data = train + test (hence index of test starts after train)
+		base = self.base						# main data = train + test (hence index of test starts after train)
 		for i in range(len(test_indices)):
 			# get index
 			index = test_indices[i]

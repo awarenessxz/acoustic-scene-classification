@@ -25,40 +25,42 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [0, 3]
+feat_indices = [4, 5, 3]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["mono_spec.npy", "LR_spec.npy"] 
-preprocessed_features_test = ["mono_spec_test.npy", "LR_spec_test.npy"]
-num_of_channels = [1, 2]		
+preprocessed_features = ["hpss_spec.npy", "3F_spec.npy", "LR_spec.npy"] 
+preprocessed_features_test = ["hpss_eval.npy", "3F_eval.npy", "LR_eval.npy"]
+num_of_channels = [2, 3, 2]		
 
 # These are for step 3. Cross validation of training data to generate train_meta
 K_FOLD = 3
 fold_norm_means = [
-	["mono_mean_k0.npy", "mono_mean_k1.npy", "mono_mean_k2.npy"],
-	["LR_mean_k0.npy", "LR_mean_k1.npy", "LR_mean_k2.npy"],
+	["full_hpss_mean_k0.npy", "full_hpss_mean_k1.npy", "full_hpss_mean_k2.npy"],
+	["full_3F_mean_k0.npy", "full_3F_mean_k1.npy", "full_3F_mean_k2.npy"],
+	["full_LR_mean_k0.npy", "full_LR_mean_k1.npy", "full_LR_mean_k2.npy"],
 ]
 fold_norm_stds = [
-	["mono_stds_k0.npy", "mono_stds_k1.npy", "mono_stds_k2.npy"],
-	["LR_stds_k0.npy", "LR_stds_k1.npy", "LR_stds_k2.npy"],
+	["full_hpss_stds_k0.npy", "full_hpss_stds_k1.npy", "full_hpss_stds_k2.npy"],
+	["full_3F_stds_k0.npy", "full_3F_stds_k1.npy", "full_3F_stds_k2.npy"],
+	["full_LR_stds_k0.npy", "full_LR_stds_k1.npy", "full_LR_stds_k2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["mono_norm_mean.npy", "LR_norm_std.npy"]
-norm_stds = ["mono_norm_std.npy", "LR_norm_std.npy"]
-save_models = ["mono_cnn.pt", "LR_cnn.pt"]
+norm_means = ["hpss_norm_mean.npy", "3F_norm_mean.npy", "LR_norm_mean.npy"]
+norm_stds = ["hpss_norm_std.npy", "3F_norm_std.npy", "LR_norm_std.npy"]
+save_models = ["hpss_cnn.pt", "3F_cnn.pt", "LR_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel.pkl"
+stacked_model_name = "stackedModelA.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "log_main.log"
-test_accu_log = "log_test_accu.log"
+main_log = "proposed_log_main.log"
+test_accu_log = "proposed_log_test_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "test_dataset.csv"
-temp_train_csv_file = "train_dataset.csv"
+temp_test_csv_file = "test_dataset1.csv"
+temp_train_csv_file = "train_dataset1.csv"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +86,7 @@ def build_stack_model():
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
-	data_manager.load_all_data()
+	data_manager.load_all_data(include_test=True)
 
 
 	# 1. Partition Training Data into K folds #############################################################################

@@ -252,7 +252,11 @@ def extract_mel_spectrogram_for_left_right_sum_channel(wav_name):
 
 	return logmel
 
+def combine_left_right_diff_into_one(LR_spec, diff_spec):
 
+	concat_mel_spec = np.concatenate((LR_spec, diff_spec), axis=0)
+
+	return concat_mel_spec
 
 
 

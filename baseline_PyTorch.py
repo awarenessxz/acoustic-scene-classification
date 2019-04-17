@@ -132,7 +132,7 @@ def main():
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
-	data_manager.load_all_data()
+	data_manager.load_all_data(include_test=True)
 
 	# Load/Preprocess Feature for model
 	data_manager.load_feature(feature_index, preprocessed_features)
