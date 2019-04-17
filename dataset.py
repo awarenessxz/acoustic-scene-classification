@@ -107,8 +107,6 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
-			left_spec = "processed_data/"
-
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
