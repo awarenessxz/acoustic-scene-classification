@@ -53,14 +53,14 @@ class BaselineASC(nn.Module):
 		super(BaselineASC, self).__init__()
 
 		# first conv layer, extracts 32 feature maps from 1 channel input
-		self.conv1 = nn.Conv2d(in_channels=in_channel, out_channels=32, kernel_size=7, stride=1, padding=3)
+		self.conv1 = nn.Conv2d(in_channels=in_channel, out_channels=32, kernel_size=11, stride=1, padding=5)
 		# batch normalization layer
 		self.conv1_bn = nn.BatchNorm2d(32)
 		# max pooling of 5x5
 		self.mp1 = nn.MaxPool2d((5,5))
 		# dropout layer, for regularization of the model (efficient learning)
 		self.drop1 = nn.Dropout(0.3)
-		self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=7, stride=1, padding=3)
+		self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2)
 		self.conv2_bn = nn.BatchNorm2d(64)
 		self.mp2 = nn.MaxPool2d((4,100))
 		self.drop2 = nn.Dropout(0.3)
