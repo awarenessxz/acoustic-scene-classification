@@ -107,6 +107,8 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
+			left_spec = "processed_data/"
+
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
@@ -125,12 +127,16 @@ class DatasetManager():
 				elif feature_index == 6:
 					mel_specs.append(ap.extract_mfcc_for_mono_channel(wav_name))
 				elif feature_index == 7:
-					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_left_channel(wav_name))
 				elif feature_index == 8:
-					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_right_channel(wav_name))
 				elif feature_index == 9:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
+					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
 				elif feature_index == 10:
+					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
+				elif feature_index == 11:
+					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
+				elif feature_index == 12:
 					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
 
 			if filename:
