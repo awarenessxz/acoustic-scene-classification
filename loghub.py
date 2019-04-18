@@ -29,8 +29,16 @@ def init_main_logger(log_file):
 	"""
 		Initialize main logger
 	"""
-	setup_logger(main_logger, log_file)
+	fileHandler = logging.FileHandler(log_file, mode='a')
+	fileHandler.setFormatter(formatter)
 
+	streamHandler = logging.StreamHandler()
+	streamHandler.setFormatter(formatter)
+
+	logger = logging.getLogger(main_logger)
+	logger.setLevel(logging.DEBUG)
+	logger.addHandler(fileHandler)
+	logger.addHandler(streamHandler)
 
 def setup_logger(logger_name, log_file, level=logging.INFO):
 	"""
@@ -39,13 +47,9 @@ def setup_logger(logger_name, log_file, level=logging.INFO):
 	fileHandler = logging.FileHandler(log_file, mode='a')
 	fileHandler.setFormatter(formatter)
 
-	streamHandler = logging.StreamHandler()
-	streamHandler.setFormatter(formatter)
-
 	logger = logging.getLogger(logger_name)
 	logger.setLevel(level)
 	logger.addHandler(fileHandler)
-	logger.addHandler(streamHandler)
 
 def logMsg(msg, otherlogs=[], level="info"):
 	"""
