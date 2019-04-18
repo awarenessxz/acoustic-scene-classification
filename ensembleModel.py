@@ -165,7 +165,7 @@ def build_stack_model():
 		data_manager.load_feature(fid, preprocessed_features_filepath)
 
 		# Prepare data
-		train_csv, test_csv = data_manager.prepare_data( train_csv=temp_train_csv_file, test_csv=temp_test_csv_file)
+		train_csv, test_csv = data_manager.prepare_data(train_csv=temp_train_csv_file, test_csv=temp_test_csv_file)
 
 		# Get Normalized preprocessed data file
 		norm_std = os.path.join(processed_root_dir, norm_stds[i])
@@ -180,8 +180,7 @@ def build_stack_model():
 
 		# Fill up the train_meta with predictions results of test.csv
 		for j in range(data_manager.get_test_data_size()):
-			v_idx = test[j]
-			test_meta[v_idx][i] = predictions[j]
+			test_meta[v_idx][j] = predictions[j]
 
 	print("Test_meta generated successfully.")
 	loghub.logMsg(name=__name__, msg="Test_meta generated successfully.", otherfile="test_acc", level="info")
