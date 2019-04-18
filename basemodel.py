@@ -61,8 +61,19 @@ def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 
 	return mean, std
 
+def computeNormalized(norm_std, norm_mean, train_labels_dir, root_dir, data_manager):
+	print("COMPUTING NORMALIZATION")
+	# Load dataset
+	dcase_dataset = DCASEDataset(train_labels_dir, root_dir, data_manager, True)
+	mean, std = NormalizeData(train_labels_dir, root_dir, dcase_dataset)
+	# Save the model
+	np.save(norm_mean, mean)
+	np.save(norm_std, std)
+	print('DATA NORMALIZATION COMPLETED')
+
+
 def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of_channel, split_valid=False, saved_model_name="",
-	test_batch_size=16, batch_size=16, epochs=200, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
+	test_batch_size=16, batch_size=16, epochs=1, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
 	"""
 		Build and Train CNN model
 		
@@ -173,7 +184,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 	train_loader = torch.utils.data.DataLoader(dcase_dataset,
 			batch_size=args.batch_size, shuffle=True, **kwargs)
 
-	valid_loader = torch.utils.data.DataLoader(dcase_dataset,
+	valid_loader = torch.utils.data.DataLoader(dcase_dataset_test,
 			batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
 	test_loader = torch.utils.data.DataLoader(dcase_dataset_test,
@@ -235,7 +246,10 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 	#print("Model TESTING START")
 	loghub.logMsg(name=__name__, msg="MODEL TESTING START", otherfile="test_acc", level="info")
 	# test the model
-	predictions = cnn.test(args, model, device, test_loader, "Testing Data")
+	if split_valid:
+		predictions = cnn.test(args, model, device, valid_loader, "Validation Data")
+	else:
+		predictions = cnn.test(args, model, device, test_loader, "Testing Data")
 
 	#print("Model TESTING END")
 	loghub.logMsg(name=__name__, msg="MODEL TESTING END", otherfile="test_acc", level="info")

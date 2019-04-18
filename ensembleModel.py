@@ -25,31 +25,31 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [13, 6]
+feat_indices = [3, 6]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
 preprocessed_features = ["mfccLR_spec.npy", "mfccmono_spec.npy"] 
 preprocessed_features_test = ["mfccLR_eval.npy", "mfccmono_eval.npy"]
 num_of_channels = [2, 1]		
 
-# These are for step 3. Cross validation of training data to generate train_meta
+# These are for step 3. Cross validation of training data to generate train_meta [Minimum 2 fold]
 K_FOLD = 3
 fold_norm_means = [
-	["full_mfccLR_mean_k0.npy", "full_mfccLR_mean_k1.npy", "full_mfccLR_mean_k2.npy"],
-	["full_mfccmono_mean_k0.npy", "full_mfccmono_mean_k1.npy", "full_mfccmono_mean_k2.npy"],
+	["full_LR_mean_k0.npy", "full_LR_mean_k1.npy", "full_LR_mean_k2.npy"],
+	["test_mean.npy", "test_mean.npy", "test_mean.npy"],
 ]
 fold_norm_stds = [
-	["full_mfccLR_stds_k0.npy", "full_mfccLR_stds_k1.npy", "full_mfccLR_stds_k2.npy"],
-	["full_mfccmono_stds_k0.npy", "full_mfccmono_stds_k1.npy", "full_mfccmono_stds_k2.npy"],
+	["full_LR_stds_k0.npy", "full_LR_stds_k1.npy", "full_LR_stds_k2.npy"],
+	["test_std.npy", "test_std.npy", "test_std.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["mfccLR_norm_mean_full.npy", "mfccmono_norm_mean_full.npy"]
-norm_stds = ["mfccLR_norm_std_full.npy", "mfccmono_norm_std_full.npy"]
-save_models = ["mfccLR_cnn.pt", "mfccmono_cnn.pt"]
+norm_means = ["hpss_norm_mean.npy", "left_norm_mean.npy"]
+norm_stds = ["hpss_norm_std.npy", "left_norm_std.npy"]
+save_models = ["test1_cnn.pt", "test2_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModelB.pkl"
+stacked_model_name = "teststackedModel.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
@@ -96,8 +96,10 @@ def build_stack_model():
 	# 2. Create 2 dataset (train_meta & test_meta) with n empty columsn (M1, M2, ... Mn) where n = number of models ##############################
 
 
+	# use k-fold of train data to fill up
 	train_meta = np.empty((data_manager.get_train_data_size(), len(save_models)))		# (n x m) where n = audio data, m = model 
-	test_meta = np.empty((data_manager.get_test_data_size(), len(save_models)))			# (n x m) where n = audio data, m = model 
+	# use all of train data to fill up
+	test_meta = np.empty((data_manager.get_test_data_size(), len(save_models)))		# (n x m) where n = audio data, m = model 
 
 
 	# 3. Apply K-fold cross validation to fill up empty columns (M1, M2, .... Mn) of train_meta with prediction results for each folds ##############################
@@ -178,7 +180,7 @@ def build_stack_model():
 
 		# Fill up the train_meta with predictions results of test.csv
 		for j in range(data_manager.get_test_data_size()):
-			test_meta[v_idx][j] = predictions[j]
+			test_meta[j][i] = predictions[j]			# data x model
 
 	print("Test_meta generated successfully.")
 	loghub.logMsg(name=__name__, msg="Test_meta generated successfully.", otherfile="test_acc", level="info")

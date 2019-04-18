@@ -113,9 +113,6 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
-			ls = np.load("processed_data/mfccleft_spec.npy")
-			rs = np.load("processed_data/mfccright_spec.npy")
-
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
@@ -138,15 +135,18 @@ class DatasetManager():
 				elif feature_index == 8:
 					mel_specs.append(ap.extract_mfcc_spectrogram_for_right_channel(wav_name))
 				elif feature_index == 9:
-					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_left_right_difference_channel(wav_name))
 				elif feature_index == 10:
-					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
+					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
 				elif feature_index == 11:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
+					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
 				elif feature_index == 12:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
+					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
 				elif feature_index == 13:
-					mel_specs.append(ap.combine_left_right_mfcc_into_one(ls[i], rs[i]))
+					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
+				elif feature_index == 14:
+					##mel_specs.append(ap.combine_left_right_mfcc_into_one(ls[i], rs[i]))
+					print("nothing")
 
 			if filename:
 				np.save(filename, mel_specs)
@@ -175,7 +175,7 @@ class DatasetManager():
 
 		# Initialize array
 		kfolds_arr = []
-		for j in range(K):
+		for i in range(K):
 			kfolds_arr.append([])			# axis 0 = folds
 
 		# K FOLDS
