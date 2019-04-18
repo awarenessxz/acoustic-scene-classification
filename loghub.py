@@ -29,7 +29,7 @@ def init_main_logger(log_file):
 	"""
 		Initialize main logger
 	"""
-	fileHandler = logging.FileHandler(log_file, mode='a')
+	fileHandler = logging.FileHandler(log_file, mode='w')
 	fileHandler.setFormatter(formatter)
 
 	streamHandler = logging.StreamHandler()
@@ -44,7 +44,7 @@ def setup_logger(logger_name, log_file, level=logging.INFO):
 	"""
 		Function to setup as many loggers as you want
 	"""
-	fileHandler = logging.FileHandler(log_file, mode='a')
+	fileHandler = logging.FileHandler(log_file, mode='w')
 	fileHandler.setFormatter(formatter)
 
 	logger = logging.getLogger(logger_name)
