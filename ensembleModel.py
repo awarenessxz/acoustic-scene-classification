@@ -25,40 +25,42 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [3, 6]
+feat_indices = [3, 4, 5]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["mfccLR_spec.npy", "mfccmono_spec.npy"] 
-preprocessed_features_test = ["mfccLR_eval.npy", "mfccmono_eval.npy"]
-num_of_channels = [2, 1]		
+preprocessed_features = ["LR_spec.npy", "hpss_spec.npy", "monohpss_spec.npy"] 
+preprocessed_features_test = ["LR_eval.npy", "hpss_eval.npy", "monohpss_eval.npy"]
+num_of_channels = [2, 2, 3]		
 
 # These are for step 3. Cross validation of training data to generate train_meta [Minimum 2 fold]
 K_FOLD = 3
 fold_norm_means = [
 	["full_LR_mean_k0.npy", "full_LR_mean_k1.npy", "full_LR_mean_k2.npy"],
-	["test_mean.npy", "test_mean.npy", "test_mean.npy"],
+	["full_hpss_mean_k0.npy", "full_hpss_mean_k1.npy", "full_hpss_mean_k2.npy"],
+	["full_3F_mean_k0.npy", "full_3F_mean_k1.npy", "full_3F_mean_k2.npy"],
 ]
 fold_norm_stds = [
 	["full_LR_stds_k0.npy", "full_LR_stds_k1.npy", "full_LR_stds_k2.npy"],
-	["test_std.npy", "test_std.npy", "test_std.npy"],
+	["full_hpss_stds_k0.npy", "full_hpss_stds_k1.npy", "full_hpss_stds_k2.npy"],
+	["full_3F_stds_k0.npy", "full_3F_stds_k1.npy", "full_3F_stds_k2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["hpss_norm_mean.npy", "left_norm_mean.npy"]
-norm_stds = ["hpss_norm_std.npy", "left_norm_std.npy"]
-save_models = ["test1_cnn.pt", "test2_cnn.pt"]
+norm_means = ["LR_norm_mean.npy", "hpss_norm_mean.npy", "monohpss_norm_mean.npy"]
+norm_stds = ["LR_norm_std.npy", "hpss_norm_std.npy", "monohpss_norm_std.npy"]
+save_models = ["LF_PRO_LR_cnn.pt", "LR_PRO_hpss_cnn.pt", "LR_PRO_monohpss_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "teststackedModel.pkl"
+stacked_model_name = "stackedModel_proposed.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "mfcc_log_main.log"
-test_accu_log = "mfcc_log_test_accu.log"
+main_log = "LR_PRO_main.log"
+test_accu_log = "LR_PRO_test_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "test_dataset2.csv"
-temp_train_csv_file = "train_dataset2.csv"
+temp_test_csv_file = "test_dataset10.csv"
+temp_train_csv_file = "train_dataset10.csv"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +82,7 @@ def build_stack_model():
 	train_labels_dir = '../Dataset/train/train_labels.csv'
 	test_labels_dir = '../Dataset/test/test_labels.csv'
 	root_dir = '../Dataset'
-	processed_root_dir = 'backup/processed'
+	processed_root_dir = 'processed_data'
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)

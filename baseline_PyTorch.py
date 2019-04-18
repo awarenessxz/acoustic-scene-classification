@@ -44,7 +44,7 @@ temp_train_csv_file = "train_dataset4.csv"
 temp_test_csv_file = "test_dataset4.csv"
 
 log_file = "EF_MFCC_MLRD_main.log"
-log_test = "EF_MFCC_MLRD_test.log"
+log_test = "F_MFCC_MLRD_test.log"
 
 
 '''

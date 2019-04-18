@@ -252,9 +252,9 @@ def extract_zero_crossing_for_mono_channel(wav_name):
 	zero_crossing = np.reshape(zero_crossing, [1, zero_crossing.shape[0], zero_crossing.shape[1]])
 	return zero_crossing
 
-def combine_left_right_spec(left, right):
+def combine_left_right_spec(hpss, mono):
 	# Concat the two spectrogram
-	concat_mel_spec = np.concatenate((left, right), axis=0)
+	concat_mel_spec = np.concatenate((mono, hpss), axis=0)
 
 	return concat_mel_spec
 	
