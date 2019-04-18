@@ -4,8 +4,8 @@ import basemodel as bm
 
 fid = 9
 name = "processed_data/mfcc_diff_spec.npy"
-norm_mean = "mfcc_diff_norm_mean.npy"
-norm_std = "mfcc_diff_norm_std.npy"
+norm_mean = "processed_data/mfcc_diff_norm_mean.npy"
+norm_std = "processed_data/mfcc_diff_norm_std.npy"
 
 
 def main():

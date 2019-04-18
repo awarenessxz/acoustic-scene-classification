@@ -112,8 +112,10 @@ def build_stack_model():
 		#print("Cross Validation Fold #%i..." % (fold+1))
 		loghub.logMsg(msg="{}: Cross Validation Fold #{}...".format(__name__, (fold+1)), otherlogs=["test_acc"])
 
+		print(str(len(validate)))
+
 		# For each model
-		for i in range(len(preprocessed_features)):	
+		for i in range(len(save_models)):	
 			#print("Fold #%i for model (%s)..." % ((fold+1), save_models[i]))
 			loghub.logMsg(msg="{}: Fold #{} for model ({})...".format(__name__, (fold+1), save_models[i]), otherlogs=["test_acc"])
 
@@ -134,12 +136,12 @@ def build_stack_model():
 
 			# Build Model & get prediction results
 			model, predictions = bm.buildCNNModel(train_csv=train_csv, test_csv=test_csv, norm_std=norm_std, norm_mean=norm_mean, 
-							data_manager=data_manager, num_of_channel=num_of_channels[i], split_valid=True, save_model=False)
+							data_manager=data_manager, num_of_channel=num_of_channels[i], save_model=False)
 
 			# Fill up the train_meta with predictions results of test.csv
 			for j in range(len(validate)):
 				v_idx = validate[j]
-				train_meta[v_idx][i] = predictions[j]
+				train_meta[v_idx][i] = predictions[j]		# data x model
 
 		#print("End of Fold #%i." % (fold+1))
 		loghub.logMsg(msg="{}: End of Fold #{}".format(__name__, (fold+1)), otherlogs=["test_acc"])

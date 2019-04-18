@@ -28,23 +28,23 @@ from utility import StopWatch
 '''
 
 # Set the parameters below depending on the features to be extracted
-num_of_channel = 6
-feature_index = 14									# determine which feature to extract
-preprocessed_features = "processed_data/EF_3FLR_spec.npy"
-preprocessed_norm_mean_file = "processed_data/EF_3FLR_norm_mean.npy"
-preprocessed_norm_std_file = "processed_data/EF_3FLR_norm_std.npy"
-saved_model = "processed_data/EF_3FLR_BaselineASC.pt"
+num_of_channel = 4
+feature_index = 16									# determine which feature to extract
+preprocessed_features = "processed_data/EF_MFCC_MLRD_spec.npy"
+preprocessed_norm_mean_file = "processed_data/EF_MFCC_MLRD_norm_mean.npy"
+preprocessed_norm_std_file = "processed_data/EF_MFCC_MLRD_norm_std.npy"
+saved_model = "processed_data/EF_MFCC_MLRD_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
 	# 4 = hpss spectrogram (2 channel)
 	# 5 = 3f spectrogram (3 channel)
-temp_train_csv_file = "train_dataset1.csv"
-temp_test_csv_file = "test_dataset1.csv"
+temp_train_csv_file = "train_dataset4.csv"
+temp_test_csv_file = "test_dataset4.csv"
 
-log_file = "EF_3FLR_main.log"
-log_test = "EF_3FLR.log"
+log_file = "EF_MFCC_MLRD_main.log"
+log_test = "EF_MFCC_MLRD_test.log"
 
 
 '''
@@ -70,7 +70,7 @@ def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 		sample = dcase_dataset[rand[i]]
 		data, label = sample
 		# print because we like to see it working
-		print('NORMALIZATION (FEATURE SCALING) : ' + str(i) + ' - data shape: ' + str(data.shape) + ', label: ' + str(label) + ', current accumulation size: ' + str(melConcat.shape))
+		loghub.logMsg(msg="{}: NORMALIZATION (FEATURE SCALING) : {} - data shape: {}, label: {}, current accumulation size: {}".format(__name__, str(i), str(data.shape), str(label), str(melConcat.shape)), level="info")
 		if flag == 0:
 				# get the data and init melConcat for the first time
 			melConcat = data
