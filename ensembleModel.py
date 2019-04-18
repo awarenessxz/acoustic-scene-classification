@@ -25,42 +25,40 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [3, 4, 5]
+feat_indices = [0, 16]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["LR_spec.npy", "hpss_spec.npy", "monohpss_spec.npy"] 
-preprocessed_features_test = ["LR_eval.npy", "hpss_eval.npy", "monohpss_eval.npy"]
-num_of_channels = [2, 2, 3]		
+preprocessed_features = ["mono_spec.npy", "LRD_spec.npy"] 
+preprocessed_features_test = ["mono_eval.npy", "LRD_eval.npy"]
+num_of_channels = [1, 3]		
 
 # These are for step 3. Cross validation of training data to generate train_meta [Minimum 2 fold]
 K_FOLD = 3
 fold_norm_means = [
-	["full_LR_mean_k0.npy", "full_LR_mean_k1.npy", "full_LR_mean_k2.npy"],
-	["full_hpss_mean_k0.npy", "full_hpss_mean_k1.npy", "full_hpss_mean_k2.npy"],
-	["full_3F_mean_k0.npy", "full_3F_mean_k1.npy", "full_3F_mean_k2.npy"],
+	["full_mono_mean_k0.npy", "full_mono_mean_k1.npy", "full_mono_mean_k2.npy"],
+	["full_LRD_mean_k0.npy", "full_LRD_mean_k1.npy", "full_LRD_mean_k2.npy"],
 ]
 fold_norm_stds = [
-	["full_LR_stds_k0.npy", "full_LR_stds_k1.npy", "full_LR_stds_k2.npy"],
-	["full_hpss_stds_k0.npy", "full_hpss_stds_k1.npy", "full_hpss_stds_k2.npy"],
-	["full_3F_stds_k0.npy", "full_3F_stds_k1.npy", "full_3F_stds_k2.npy"],
+	["full_mono_stds_k0.npy", "full_mono_stds_k1.npy", "full_mono_stds_k2.npy"],
+	["full_LRD_stds_k0.npy", "full_LRD_stds_k1.npy", "full_LRD_stds_k2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["LR_norm_mean.npy", "hpss_norm_mean.npy", "monohpss_norm_mean.npy"]
-norm_stds = ["LR_norm_std.npy", "hpss_norm_std.npy", "monohpss_norm_std.npy"]
-save_models = ["LF_PRO_LR_cnn.pt", "LR_PRO_hpss_cnn.pt", "LR_PRO_monohpss_cnn.pt"]
+norm_means = ["mono_norm_mean.npy", "LRD_norm_mean.npy"]
+norm_stds = ["mono_norm_std.npy", "LRD_norm_std.npy"]
+save_models = ["LF_SPEC_mono_cnn.pt", "LF_SPEC_LRD_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel_proposed.pkl"
+stacked_model_name = "stackedModel_SPEC.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "LR_PRO_main.log"
-test_accu_log = "LR_PRO_test_accu.log"
+main_log = "LF_SPEC_main.log"
+test_accu_log = "LF_SPEC_test_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "test_dataset10.csv"
-temp_train_csv_file = "train_dataset10.csv"
+temp_test_csv_file = "test_dataset11.csv"
+temp_train_csv_file = "train_dataset11.csv"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////

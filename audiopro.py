@@ -252,13 +252,6 @@ def extract_zero_crossing_for_mono_channel(wav_name):
 	zero_crossing = np.reshape(zero_crossing, [1, zero_crossing.shape[0], zero_crossing.shape[1]])
 	return zero_crossing
 
-def combine_left_right_spec(hpss, mono):
-	# Concat the two spectrogram
-	concat_mel_spec = np.concatenate((mono, hpss), axis=0)
-
-	return concat_mel_spec
-	
-
 
 def extract_early_fusion_left_right_3f(wav_name):
 	# Extract 3f
@@ -271,16 +264,24 @@ def extract_early_fusion_left_right_3f(wav_name):
 
 	return concat_mel_spec
 
-def extract_early_fusion_left_right_diff_mono(wav_name, leftright, mono):
-
+def extract_early_fusion_left_right_diff_mono(wav_name):
+	# Extract mono
+	LR_spec = extract_mel_spectrogram_for_left_and_right_channel(wav_name)
+	# Extract leftrigth
+	mono_spec = extract_mel_spectrogram_for_mono_channel(wav_name)
 	# Extract diff
 	diff_spec = extract_mfcc_spectrogram_for_left_right_difference_channel(wav_name)
 
 	# Concat the three spectrogram
-	concat_mel_spec = np.concatenate((mono, leftright, diff_spec), axis=0)
+	concat_mel_spec = np.concatenate((mono_spec, LR_spec, diff_spec), axis=0)
 
 	return concat_mel_spec
 
+def combine_left_right_with_LRdifference(leftright, diff):
+	# Concat the three spectrogram
+	concat_mel_spec = np.concatenate((leftright, diff), axis=0)
+
+	return concat_mel_spec
 
 
 
