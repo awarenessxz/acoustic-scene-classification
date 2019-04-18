@@ -70,7 +70,7 @@ class DatasetManager():
 
 		# Read the training & testing data from the csv file
 		#print("Loading all data...")
-		loghub.logMsg(name=__name__, msg="Loading all data...", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Loading all data...".format(__name__), otherlogs=["test_acc"])
 		self.train_data_list, self.train_label_list, self.train_label_indices = self.__read_DCASE_csv_file(self.train_csv_filepath, "train")
 		self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "test")
 		self.audio_files = self.train_data_list + self.test_data_list
@@ -86,7 +86,7 @@ class DatasetManager():
 
 		self.data_type = np.asarray(self.data_type)
 		#print("All data loaded.")	
-		loghub.logMsg(name=__name__, msg="All data loaded.", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: All data loaded.".format(__name__), otherlogs=["test_acc"])
 
 	def load_feature(self, feature_index, filename):
 		"""
@@ -99,12 +99,12 @@ class DatasetManager():
 		# check that data have been loaded
 		if not self.audio_files:
 			#print("Data have not been loaded. Running data_manager.load_all_data()...")
-			loghub.logMsg(name=__name__, msg="Data have not been loaded. Running data_manager.load_all_data()...", level="warning")
+			loghub.logMsg(msg="{}: Data have not been loaded. Running data_manager.load_all_data()...".format(__name__), otherlogs=["test_acc"], level="warning")
 			self.load_all_data()
 
 		# Extract features
 		#print("Loading/Extracting feature %i from audio files..." % feature_index)
-		loghub.logMsg(name=__name__, msg="Loading/Extracting feature {} from audio files...".format(feature_index), otherfile="test_acc", level="info")	
+		loghub.logMsg(msg="{}: Loading/Extracting feature {} from audio files...".format(__name__, feature_index), otherlogs=["test_acc"])
 
 		if os.path.isfile(filename):
 			# file already exists
@@ -145,8 +145,7 @@ class DatasetManager():
 				elif feature_index == 13:
 					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
 				elif feature_index == 14:
-					##mel_specs.append(ap.combine_left_right_mfcc_into_one(ls[i], rs[i]))
-					print("nothing")
+					mel_specs.append(ap.extract_early_fusion_left_right_3f(wav_name))
 
 			if filename:
 				np.save(filename, mel_specs)
@@ -155,7 +154,7 @@ class DatasetManager():
 			self.audio_data = mel_specs
 
 		#print("Feature %i extracted." % feature_index)
-		loghub.logMsg(name=__name__, msg="Feature {} extracted.".format(feature_index), otherfile="test_acc", level="info")	
+		loghub.logMsg(msg="{}: Feature {} extracted.".format(__name__, feature_index), otherlogs=["test_acc"])
 
 	def apply_k_fold(self, K=5):
 		"""
@@ -170,7 +169,7 @@ class DatasetManager():
 		# check that data have been loaded
 		if not self.train_data_list:
 			#print("Data have not been loaded. Running data_manager.load_all_data()...")
-			loghub.logMsg(name=__name__, msg="Data have not been loaded. Running data_manager.load_all_data()...", level="warning")
+			loghub.logMsg(msg="{}: Data have not been loaded. Running data_manager.load_all_data()...".format(__name__), otherlogs=["test_acc"], level="warning")
 			self.load_all_data()
 
 		# Initialize array
@@ -231,7 +230,7 @@ class DatasetManager():
 		csvFile.close()
 
 		#print("Test Data Labels generated in %s (test)" % test_filepath)
-		loghub.logMsg(name=__name__, msg="Test Data Labels generated in {} (test)".format(test_filepath), otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Test Data Labels generated in {} (test)".format(__name__, test_filepath), otherlogs=["test_acc"])
 
 		return test_filepath
 
@@ -252,7 +251,7 @@ class DatasetManager():
 		"""
 
 		#print("Generating train.csv and test.csv for building model...")
-		loghub.logMsg(name=__name__, msg="Generating train.csv and test.csv for building model...", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Generating train.csv and test.csv for building model...".format(__name__), otherlogs=["test_acc"])
 
 		self.train_idx_map = []
 		self.test_idx_map = []
@@ -321,7 +320,7 @@ class DatasetManager():
 		csvFile.close()
 
 		#print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
-		loghub.logMsg(name=__name__, msg="Data labels generated in {} (train) and {} (test)".format(train_filepath, test_filepath), otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Data labels generated in {} (train) and {} (test)".format(__name__, train_filepath, test_filepath), otherlogs=["test_acc"])
 
 		return train_filepath, test_filepath
 
@@ -344,7 +343,7 @@ class DatasetManager():
 				return self.test_idx_map[idx]
 			else:
 				#print("Error! Invalid data type")
-				loghub.logMsg(name=__name__, msg="Error! Invalid data type", level="error")
+				loghub.logMsg(msg="{}: Error! Invalid data type".format(__name__), otherlogs=["test_acc"], level="error")
 				return
 
 	def split_into_classes(self):

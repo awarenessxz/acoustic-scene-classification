@@ -47,7 +47,7 @@ def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 		data, label = sample
 		# print because we like to see it working
 		#print('NORMALIZATION (FEATURE SCALING) : ' + str(i) + ' - data shape: ' + str(data.shape) + ', label: ' + str(label) + ', current accumulation size: ' + str(melConcat.shape))
-		loghub.logMsg(name=__name__, msg="NORMALIZATION (FEATURE SCALING) : {} - data shape: {}, label: {}, current accumulation size: {}".format(str(i), str(data.shape), str(label), str(melConcat.shape)), level="info")
+		loghub.logMsg(msg="{}: NORMALIZATION (FEATURE SCALING) : {} - data shape: {}, label: {}, current accumulation size: {}".format(__name__, str(i), str(data.shape), str(label), str(melConcat.shape)), level="info")
 		if flag == 0:
 				# get the data and init melConcat for the first time
 			melConcat = data
@@ -134,14 +134,14 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 	# Compute Normalization Score
 	if os.path.isfile(norm_std) and os.path.isfile(norm_mean):
 		#print("Loading Normalization Data...")
-		loghub.logMsg(name=__name__, msg="Loading Normalization Data...", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Loading Normalization Data...".format(__name__), otherlogs=["test_acc"])
 		# load the npy files
 		mean = np.load(norm_mean)
 		std = np.load(norm_std)
 	else:
 		# Run the normalization and save mean/std if not already computed
 		#print('DATA NORMALIZATION : ACCUMULATING THE DATA')
-		loghub.logMsg(name=__name__, msg="DATA NORMALIZATION : ACCUMULATING THE DATA", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: DATA NORMALIZATION : ACCUMULATING THE DATA".format(__name__), otherlogs=["test_acc"])
 		# Load dataset
 		dcase_dataset = DCASEDataset(train_labels_dir, root_dir, data_manager, True)
 		mean, std = NormalizeData(train_labels_dir, root_dir, dcase_dataset)
@@ -149,7 +149,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 		np.save(norm_mean, mean)
 		np.save(norm_std, std)
 		#print('DATA NORMALIZATION COMPLETED')
-		loghub.logMsg(name=__name__, msg="DATA NORMALIZATION COMPLETED", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: DATA NORMALIZATION COMPLETED".format(__name__), otherlogs=["test_acc"])
 
 	# Convert to Torch Tensors
 	mean = torch.from_numpy(mean)
@@ -165,7 +165,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 		])
 
 	#print("Preparing Data...")
-	loghub.logMsg(name=__name__, msg="Preparing Data...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Preparing Data...".format(__name__), otherlogs=["test_acc"])
 
 	# init the datasets
 	dcase_dataset = DCASEDataset(csv_file=train_labels_dir, root_dir=root_dir, data_manager=data_manager,
@@ -226,25 +226,25 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 
 
 	#print('MODEL TRAINING START')
-	loghub.logMsg(name=__name__, msg="MODEL TRAINING START", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: MODEL TRAINING START".format(__name__), otherlogs=["test_acc"])
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
 		#print("MODEL: %s" % saved_model_name)
-		loghub.logMsg(name=__name__, msg="EPOCH {} - MODEL: {}".format(epoch, saved_model_name), otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: EPOCH {} - MODEL: {}".format(__name__, epoch, saved_model_name), otherlogs=["test_acc"])
 		cnn.test(args, model, device, valid_loader, "Validation Data")
 		#cnn.test(args, model, device, train_loader, 'Training Data')
 		#cnn.test(args, model, device, test_loader, 'Testing Data')
 
 	#print('MODEL TRAINING END')
-	loghub.logMsg(name=__name__, msg="MODEL TRAINING END", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: MODEL TRAINING END".format(__name__), otherlogs=["test_acc"])
 
 
 	# Step 4. Test Model ###############################################################
 
 
 	#print("Model TESTING START")
-	loghub.logMsg(name=__name__, msg="MODEL TESTING START", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: MODEL TESTING START".format(__name__), otherlogs=["test_acc"])
 	# test the model
 	if split_valid:
 		predictions = cnn.test(args, model, device, valid_loader, "Validation Data")
@@ -252,7 +252,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 		predictions = cnn.test(args, model, device, test_loader, "Testing Data")
 
 	#print("Model TESTING END")
-	loghub.logMsg(name=__name__, msg="MODEL TESTING END", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: MODEL TESTING END".format(__name__), otherlogs=["test_acc"])
 
 
 	# Step 5: Save Model ################################################################
@@ -314,11 +314,11 @@ def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, 
 
 	# Load normalization score
 	#print("Loading Normalization Data...")
-	loghub.logMsg(name=__name__, msg="Loading Normalization Data...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Loading Normalization Data...".format(__name__), otherlogs=["test_acc"])
 	mean = np.load(norm_mean)
 	std = np.load(norm_std)
 	#print('Normalization Data Loaded.')
-	loghub.logMsg(name=__name__, msg="Normalization Data Loaded.", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Normalization Data Loaded.".format(__name__), otherlogs=["test_acc"])
 
 	# Convert to Torch Tensors
 	mean = torch.from_numpy(mean)
@@ -334,7 +334,7 @@ def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, 
 		])
 
 	#print("Preparing Data...")
-	loghub.logMsg(name=__name__, msg="Preparing Data...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Preparing Data...".format(__name__), otherlogs=["test_acc"])
 
 	# init the datasets
 	dcase_dataset_test = DCASEDataset(csv_file=test_labels_dir, root_dir=root_dir, data_manager=data_manager,
@@ -356,7 +356,7 @@ def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, 
 
 
 	#print("Model TESTING START...")
-	loghub.logMsg(name=__name__, msg="Model TESTING START...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Model TESTING START...".format(__name__), otherlogs=["test_acc"])
 
 	# load the model 
 	model = BaselineASC(num_of_channel).to(device)
@@ -366,7 +366,7 @@ def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, 
 	predictions = cnn.test(args, model, device, test_loader, "Testing Data")
 
 	#print("Model TESTING END.")
-	loghub.logMsg(name=__name__, msg="Model TESTING END.", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Model TESTING END.".format(__name__), otherlogs=["test_acc"])
 
 
 	return predictions

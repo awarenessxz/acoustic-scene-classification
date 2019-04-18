@@ -142,9 +142,9 @@ def train(args, model, device, train_loader, optimizer, epoch):
 			#print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
 			#	epoch, batch_idx * len(data), len(train_loader.dataset),
 			#	100. * batch_idx / len(train_loader), loss.item()))
-			loghub.logMsg(name=__name__, msg="Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-				epoch, batch_idx * len(data), len(train_loader.dataset),
-				100. * batch_idx / len(train_loader), loss.item()), level="info")
+			loghub.logMsg(msg="{}: Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+				__name__, epoch, batch_idx * len(data), len(train_loader.dataset), 
+				100. * batch_idx / len(train_loader), loss.item()), otherlogs=["test_acc"])
 
 def test(args, model, device, test_loader, data_type):
 
@@ -156,7 +156,7 @@ def test(args, model, device, test_loader, data_type):
 	correct = 0
 	pred_results = np.asarray([])
 	#print('Testing..')
-	loghub.logMsg(name=__name__, msg="Testing...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Testing...".format(__name__), otherlogs=["test_acc"])
 
 	# Use no gradient backpropagations (as we are just testing)
 	with torch.no_grad():
@@ -193,9 +193,9 @@ def test(args, model, device, test_loader, data_type):
 	#print('Model prediction on ' + data_type + ': Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
 	#	test_loss, correct, len(test_loader.dataset),
 	#	100. * correct / len(test_loader.dataset)))
-	loghub.logMsg(name=__name__, msg="Model prediction on {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-		data_type, test_loss, correct, len(test_loader.dataset),
-		100. * correct / len(test_loader.dataset)), otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Model prediction on {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+		__name__, data_type, test_loss, correct, len(test_loader.dataset),
+		100. * correct / len(test_loader.dataset)), otherlogs=["test_acc"])
 
 	return pred_results
 

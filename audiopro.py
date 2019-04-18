@@ -257,6 +257,16 @@ def combine_left_right_mfcc_into_one(Left_spec, right_spec):
 
 	return concat_mel_spec
 
+def extract_early_fusion_left_right_3f(wav_name):
+	# Extract 3f
+	3f_spec = extract_mel_spectrogram_for_3f(wav_name)
+	# Extract left right
+	lr_spec = extract_mel_spectrogram_for_left_and_right_channel(wav_name)
+
+	# Concat the two spectrogram
+	concat_mel_spec = np.concatenate((3f_spec, lr_spec), axis=0)
+
+	return concat_mel_spec
 
 
 

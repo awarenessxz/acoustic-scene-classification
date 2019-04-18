@@ -28,23 +28,23 @@ from utility import StopWatch
 '''
 
 # Set the parameters below depending on the features to be extracted
-num_of_channel = 1
-feature_index = 10									# determine which feature to extract
-preprocessed_features = "processed_data/sum_spec.npy"
-preprocessed_norm_mean_file = "processed_data/sum_norm_mean.npy"
-preprocessed_norm_std_file = "processed_data/sum_norm_std.npy"
-saved_model = "processed_data/sum_BaselineASC.pt"
+num_of_channel = 6
+feature_index = 14									# determine which feature to extract
+preprocessed_features = "processed_data/EF_3FLR_spec.npy"
+preprocessed_norm_mean_file = "processed_data/EF_3FLR_norm_mean.npy"
+preprocessed_norm_std_file = "processed_data/EF_3FLR_norm_std.npy"
+saved_model = "processed_data/EF_3FLR_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
 	# 4 = hpss spectrogram (2 channel)
 	# 5 = 3f spectrogram (3 channel)
-temp_train_csv_file = "cnn_train_dataset5.csv"
-temp_test_csv_file = "cnn_test_dataset5.csv"
+temp_train_csv_file = "train_dataset1.csv"
+temp_test_csv_file = "test_dataset1.csv"
 
-log_file = "cnn_main5.log"
-log_test = "cnn_test5.log"
+log_file = "EF_3FLR_main.log"
+log_test = "EF_3FLR.log"
 
 
 '''
@@ -151,13 +151,15 @@ def main():
 		std = np.load(preprocessed_norm_std_file)
 	else:
 		# If not, run the normalization and save the mean/std
-		print('DATA NORMALIZATION : ACCUMULATING THE DATA')
+		#print('DATA NORMALIZATION : ACCUMULATING THE DATA')
+		loghub.logMsg(msg="{}: DATA NORMALIZATION : ACCUMULATING THE DATA".format(__name__), otherlogs=["test_acc"])
 		# load the datase
 		dcase_dataset = DCASEDataset(train_labels_dir, root_dir, data_manager, True)
 		mean, std = NormalizeData(train_labels_dir, root_dir, dcase_dataset)
 		np.save(preprocessed_norm_mean_file, mean)
 		np.save(preprocessed_norm_std_file, std)
-		print('DATA NORMALIZATION COMPLETED')
+		#print('DATA NORMALIZATION COMPLETED')
+		loghub.logMsg(msg="{}: DATA NORMALIZATION COMPLETED".format(__name__), otherlogs=["test_acc"])
 
 	# Convert to Torch Tensors
 	mean = torch.from_numpy(mean)
@@ -207,7 +209,7 @@ def main():
 
 
 	#print('MODEL TRAINING START')
-	loghub.logMsg(name=__name__, msg="MODEL TRAINING START.", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: MODEL TRAINING START.".format(__name__), otherlogs=["test_acc"])
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
@@ -215,7 +217,7 @@ def main():
 		cnn.test(args, model, device, test_loader, 'Test Data')			
 
 	#print('MODEL TRAINING END')
-	loghub.logMsg(name=__name__, msg="MODEL TRAINING END.", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: MODEL TRAINING END.".format(__name__), otherlogs=["test_acc"])
 
 
 	# Step 4: Save Model ################################################################
@@ -231,7 +233,7 @@ def main():
 
 		
 if __name__ == '__main__':
-	loghub.init(os.path.join("log", log_file))
+	loghub.init_main_logger(os.path.join("log", log_file))
 	loghub.setup_logger("test_acc", os.path.join("log", log_file))
 
 	# create a separate main function because original main function is too mainstream

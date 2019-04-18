@@ -80,7 +80,7 @@ def build_stack_model():
 	train_labels_dir = '../Dataset/train/train_labels.csv'
 	test_labels_dir = '../Dataset/test/test_labels.csv'
 	root_dir = '../Dataset'
-	processed_root_dir = 'processed_data'
+	processed_root_dir = 'backup/processed'
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
@@ -106,16 +106,16 @@ def build_stack_model():
 
 
 	#print("Getting Prediction Results to fill in train_meta")
-	loghub.logMsg(name=__name__, msg="Getting Prediction Results to fill in train_meta", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Getting Prediction Results to fill in train_meta".format(__name__), otherlogs=["test_acc"])
 	fold = 0		# fold counter
 	for train, validate in kfolds:										# train, validate is a list of index
 		#print("Cross Validation Fold #%i..." % (fold+1))
-		loghub.logMsg(name=__name__, msg="Cross Validation Fold #{}...".format((fold+1)), otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Cross Validation Fold #{}...".format(__name__, (fold+1)), otherlogs=["test_acc"])
 
 		# For each model
 		for i in range(len(preprocessed_features)):	
 			#print("Fold #%i for model (%s)..." % ((fold+1), save_models[i]))
-			loghub.logMsg(name=__name__, msg="Fold #{} for model ({})...".format((fold+1), save_models[i]), otherfile="test_acc", level="info")
+			loghub.logMsg(msg="{}: Fold #{} for model ({})...".format(__name__, (fold+1), save_models[i]), otherlogs=["test_acc"])
 
 			# Get feature index
 			fid = feat_indices[i]
@@ -142,18 +142,18 @@ def build_stack_model():
 				train_meta[v_idx][i] = predictions[j]
 
 		#print("End of Fold #%i." % (fold+1))
-		loghub.logMsg(name=__name__, msg="End of Fold #{}".format((fold+1)), otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: End of Fold #{}".format(__name__, (fold+1)), otherlogs=["test_acc"])
 		fold += 1
 
 	#print("Train_meta generated successfully.")
-	loghub.logMsg(name=__name__, msg="Train_meta generated successfully.", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Train_meta generated successfully.".format(__name__), otherlogs=["test_acc"])
 
 
 	# 4. Fit each model to the full training dataset & make predictions on the test dataset, store into test_meta ##############################
 
 
 	#print("Getting Prediction Results to fill in test_meta...")
-	loghub.logMsg(name=__name__, msg="Getting Prediction Results to fill in test_meta...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Getting Prediction Results to fill in test_meta...".format(__name__), otherlogs=["test_acc"])
 
 	# For each model
 	for i in range(len(save_models)):
@@ -182,8 +182,8 @@ def build_stack_model():
 		for j in range(data_manager.get_test_data_size()):
 			test_meta[j][i] = predictions[j]			# data x model
 
-	print("Test_meta generated successfully.")
-	loghub.logMsg(name=__name__, msg="Test_meta generated successfully.", otherfile="test_acc", level="info")
+	#print("Test_meta generated successfully.")
+	loghub.logMsg(msg="{}: Test_meta generated successfully.".format(__name__), otherlogs=["test_acc"])
 
 
 	# 5. Fit (stacking model S) to train_meta, using (M1, M2, ... Mn) as features. ############################################################
@@ -205,8 +205,8 @@ def build_stack_model():
 	
 	#print("Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
 	#	correct, total, percentage, precision, recall, f1_measure))
-	loghub.logMsg(name=__name__, msg="Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
-		correct, total, percentage, precision, recall, f1_measure), otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Stacked Model Prediction:\nAccuracy: {}/{} ({:.0f}%)\n\tPrecision: {}\n\tRecall: {}\n\tF1 Measure:{}".format(
+		__name__, correct, total, percentage, precision, recall, f1_measure), otherlogs=["test_acc"])
 
 	# 7. Save the ensemble model ########################################################################################################################
 
@@ -279,8 +279,8 @@ def predict_with_stack_model():
 	correct, total = util.compare_list_elements(predicts, data_manager.test_label_indices)
 	percentage = 100 * correct / total
 	#print("Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(correct, total, percentage))
-	loghub.logMsg(name=__name__, msg="Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(
-		correct, total, percentage), otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(
+		__name__, correct, total, percentage), otherlogs=["test_acc"])
 
 
 def process_arguments(parser):
@@ -320,27 +320,27 @@ if __name__ == '__main__':
 	process_arguments(parser)
 
 	# 2. Set up logging
-	loghub.init(os.path.join("log", main_log))
+	loghub.init_main_logger(os.path.join("log", main_log))
 	loghub.setup_logger("test_acc", os.path.join("log", test_accu_log))
 
 	# 3. Run Ensemble Learning 
 	if ensemble_mode == 0:
 		#print("Building Stacked Ensemble Model (Meta Ensembling)...")
-		loghub.logMsg(name=__name__, msg="Building Stacked Ensemble Model (Meta Ensembling)...", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Building Stacked Ensemble Model (Meta Ensembling)...".format(__name__), otherlogs=["test_acc"])
 		build_stack_model()
 	elif ensemble_mode == 1:
 		#print("Testing Stacked Ensemble Model...")
-		loghub.logMsg(name=__name__, msg="Testing Stacked Ensemble Model...", otherfile="test_acc", level="info")
+		loghub.logMsg(msg="{}: Testing Stacked Ensemble Model...".format(__name__), otherlogs=["test_acc"])
 		predict_with_stack_model()
 	else:
 		#print("Nothing yet...")
-		loghub.logMsg(name=__name__, msg="Nothing yet...", level="error")
+		loghub.logMsg(msg="{}: Nothing yet...".format(__name__), otherlogs=["test_acc"], level="error")
 
 
 	# 3. End Timer
 	timer.stopTimer()
 	time_taken = timer.getElapsedTime()
-	loghub.logMsg(name=__name__, msg="Total time taken: {}".format(time_taken), otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Total time taken: {}".format(__name__, time_taken), otherlogs=["test_acc"])
 
 
 
