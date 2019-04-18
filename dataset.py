@@ -113,6 +113,9 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
+			ls = np.load("processed_data/mfccleft_spec.npy")
+			rs = np.load("processed_data/mfccright_spec.npy")
+
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
@@ -142,6 +145,8 @@ class DatasetManager():
 					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
 				elif feature_index == 12:
 					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
+				elif feature_index == 13:
+					mel_specs.append(ap.combine_left_right_mfcc_into_one(ls[i], rs[i]))
 
 			if filename:
 				np.save(filename, mel_specs)
@@ -419,7 +424,7 @@ class DCASEDataset(Dataset):
 			csv_file (string): Path to the csv file with annotations.
 			root_dir (string): Directory with all the audio.
 			data_manager (DataManager): class that contains all loaded dataset
-			is_train_data (bool): Indicator if data is trian or test
+			is_train_data (bool): Indicator if data is train or test
 			transform (callable, optional): Optional transform to be applied
 				on a sample.
 		"""	

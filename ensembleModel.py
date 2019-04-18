@@ -25,42 +25,40 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [4, 5, 3]
+feat_indices = [13, 6]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["hpss_spec.npy", "3F_spec.npy", "LR_spec.npy"] 
-preprocessed_features_test = ["hpss_eval.npy", "3F_eval.npy", "LR_eval.npy"]
-num_of_channels = [2, 3, 2]		
+preprocessed_features = ["mfccLR_spec.npy", "mfccmono_spec.npy"] 
+preprocessed_features_test = ["mfccLR_eval.npy", "mfccmono_eval.npy"]
+num_of_channels = [2, 1]		
 
 # These are for step 3. Cross validation of training data to generate train_meta
 K_FOLD = 3
 fold_norm_means = [
-	["full_hpss_mean_k0.npy", "full_hpss_mean_k1.npy", "full_hpss_mean_k2.npy"],
-	["full_3F_mean_k0.npy", "full_3F_mean_k1.npy", "full_3F_mean_k2.npy"],
-	["full_LR_mean_k0.npy", "full_LR_mean_k1.npy", "full_LR_mean_k2.npy"],
+	["full_mfccLR_mean_k0.npy", "full_mfccLR_mean_k1.npy", "full_mfccLR_mean_k2.npy"],
+	["full_mfccmono_mean_k0.npy", "full_mfccmono_mean_k1.npy", "full_mfccmono_mean_k2.npy"],
 ]
 fold_norm_stds = [
-	["full_hpss_stds_k0.npy", "full_hpss_stds_k1.npy", "full_hpss_stds_k2.npy"],
-	["full_3F_stds_k0.npy", "full_3F_stds_k1.npy", "full_3F_stds_k2.npy"],
-	["full_LR_stds_k0.npy", "full_LR_stds_k1.npy", "full_LR_stds_k2.npy"],
+	["full_mfccLR_stds_k0.npy", "full_mfccLR_stds_k1.npy", "full_mfccLR_stds_k2.npy"],
+	["full_mfccmono_stds_k0.npy", "full_mfccmono_stds_k1.npy", "full_mfccmono_stds_k2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["hpss_norm_mean.npy", "3F_norm_mean.npy", "LR_norm_mean.npy"]
-norm_stds = ["hpss_norm_std.npy", "3F_norm_std.npy", "LR_norm_std.npy"]
-save_models = ["hpss_cnn.pt", "3F_cnn.pt", "LR_cnn.pt"]
+norm_means = ["mfccLR_norm_mean_full.npy", "mfccmono_norm_mean_full.npy"]
+norm_stds = ["mfccLR_norm_std_full.npy", "mfccmono_norm_std_full.npy"]
+save_models = ["mfccLR_cnn.pt", "mfccmono_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModelA.pkl"
+stacked_model_name = "stackedModelB.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "proposed_log_main.log"
-test_accu_log = "proposed_log_test_accu.log"
+main_log = "mfcc_log_main.log"
+test_accu_log = "mfcc_log_test_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "test_dataset1.csv"
-temp_train_csv_file = "train_dataset1.csv"
+temp_test_csv_file = "test_dataset2.csv"
+temp_train_csv_file = "train_dataset2.csv"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
