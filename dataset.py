@@ -113,11 +113,15 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
-			for i in range(len(self.audio_files)):
-				wav_name = os.path.join(self.root_dir, self.audio_files[i])
-
+			if feature_index == 16:
 				lr = np.load("processed_data/LR_spec.npy")
 				diff = np.load("processed_data/diff_spec.npy")
+			elif feature_index == 17:
+				lr = np.load("processed_data/mfcc_LR_spec.npy")
+				diff = np.load("processed_data/mfcc_diff_spec.npy")
+
+			for i in range(len(self.audio_files)):
+				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
 				if feature_index == 0:
 					mel_specs.append(ap.extract_mel_spectrogram_for_mono_channel(wav_name))
@@ -153,6 +157,8 @@ class DatasetManager():
 					mel_specs.append(ap.extract_early_fusion_left_right_diff_mono(wav_name))
 				elif feature_index == 16:
 					mel_specs.append(ap.combine_left_right_with_LRdifference(lr[i], diff[i]))
+				elif feature_index == 17:
+					mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(lr[i], diff[i]))
 
 			if filename:
 				np.save(filename, mel_specs)

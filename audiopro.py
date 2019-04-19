@@ -283,6 +283,11 @@ def combine_left_right_with_LRdifference(leftright, diff):
 
 	return concat_mel_spec
 
+def combine_mfcc_left_right_with_LRdifference(leftright, diff):
+	# Concat the three spectrogram
+	concat_mel_spec = np.concatenate((leftright, diff), axis=0)
+
+	return concat_mel_spec
 
 
 

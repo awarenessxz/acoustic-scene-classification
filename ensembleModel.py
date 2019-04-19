@@ -25,40 +25,40 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [0, 16]
+feat_indices = [6, 17]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["mono_spec.npy", "LRD_spec.npy"] 
-preprocessed_features_test = ["mono_eval.npy", "LRD_eval.npy"]
+preprocessed_features = ["mfcc_mono_spec.npy", "mfcc_LRD_spec.npy"] 
+preprocessed_features_test = ["mfcc_mono_eval.npy", "mfcc_LRD_eval.npy"]
 num_of_channels = [1, 3]		
 
 # These are for step 3. Cross validation of training data to generate train_meta [Minimum 2 fold]
 K_FOLD = 3
 fold_norm_means = [
-	["full_mono_mean_k0.npy", "full_mono_mean_k1.npy", "full_mono_mean_k2.npy"],
-	["full_LRD_mean_k0.npy", "full_LRD_mean_k1.npy", "full_LRD_mean_k2.npy"],
+	["full_mfcc_mono_mean_k0.npy", "full_mfcc_mono_mean_k1.npy", "full_mfcc_mono_mean_k2.npy"],
+	["full_mfcc_LRD_mean_k0.npy", "full_mfcc_LRD_mean_k1.npy", "full_mfcc_LRD_mean_k2.npy"],
 ]
 fold_norm_stds = [
-	["full_mono_stds_k0.npy", "full_mono_stds_k1.npy", "full_mono_stds_k2.npy"],
-	["full_LRD_stds_k0.npy", "full_LRD_stds_k1.npy", "full_LRD_stds_k2.npy"],
+	["full_mfcc_mono_stds_k0.npy", "full_mfcc_mono_stds_k1.npy", "full_mfcc_mono_stds_k2.npy"],
+	["full_mfcc_LRD_stds_k0.npy", "full_mfcc_LRD_stds_k1.npy", "full_mfcc_LRD_stds_k2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["mono_norm_mean.npy", "LRD_norm_mean.npy"]
-norm_stds = ["mono_norm_std.npy", "LRD_norm_std.npy"]
-save_models = ["LF_SPEC_mono_cnn.pt", "LF_SPEC_LRD_cnn.pt"]
+norm_means = ["mfcc_mono_norm_mean.npy", "mfcc_LRD_norm_mean.npy"]
+norm_stds = ["mfcc_mono_norm_std.npy", "mfcc_LRD_norm_std.npy"]
+save_models = ["LF_MFCC_mono_cnn.pt", "LF_MFCC_LRD_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel_SPEC.pkl"
+stacked_model_name = "stackedModel_MFCC.pkl"
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "LF_SPEC_main.log"
-test_accu_log = "LF_SPEC_test_accu.log"
+main_log = "LF_MFCC_main.log"
+test_accu_log = "LF_MFCC_test_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "test_dataset11.csv"
-temp_train_csv_file = "train_dataset11.csv"
+temp_test_csv_file = "test_dataset12.csv"
+temp_train_csv_file = "train_dataset12.csv"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
