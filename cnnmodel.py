@@ -199,6 +199,40 @@ def test(args, model, device, test_loader, data_type):
 
 	return pred_results
 
+def predict(model, device, test_loader):
+
+	# evaluate the model
+	model.eval()
+
+	pred_results = np.asarray([])
+	#test_pred = torch.LongTensor()
+	#print('Testing..')
+	loghub.logMsg(msg="{}: Predicting...".format(__name__), otherlogs=["test_acc"])
+
+	# Use no gradient backpropagations (as we are just testing)
+	with torch.no_grad():
+		# for every testing batch
+		for i_batch, sample_batched in enumerate(test_loader):
+			# for every batch, extract data (16, 1, 40, 500) and label (16, 1)
+			data, invalid_label = sample_batched
+
+			# Map the variables to the current device (CPU or GPU)
+			data = data.to(device, dtype=torch.float)
+
+			# get the predictions
+			output = model(data)
+
+			# get the predictions
+			pred = output.argmax(dim=1, keepdim=True)
+
+			# collate the predicted results
+			pred = np.squeeze(pred.cpu().numpy())
+			pred_results = np.concatenate((pred_results, pred))
+			#test_pred = torch.cat((test_pred, pred), dim=0)
+			
+	return pred_results
+
+
 
 
 

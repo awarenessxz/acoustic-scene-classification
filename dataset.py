@@ -2,7 +2,6 @@
 Handles anything related to the DCASE dataset
 """
 
-import csv
 import os
 import numpy as np
 
@@ -14,6 +13,7 @@ import librosa
 # import our own tools
 import audiopro as ap
 import loghub
+import utility as util
 
 class DatasetManager():
 	"""
@@ -63,7 +63,7 @@ class DatasetManager():
 	def get_test_data_size(self):
 		return len(self.test_data_list)
 
-	def load_all_data(self, include_test=False):
+	def load_all_data(self, include_test=False, with_labels=True):
 		"""
 			load all data, extract the features and save as filename
 		"""
@@ -72,7 +72,10 @@ class DatasetManager():
 		#print("Loading all data...")
 		loghub.logMsg(msg="{}: Loading all data...".format(__name__), otherlogs=["test_acc"])
 		self.train_data_list, self.train_label_list, self.train_label_indices = self.__read_DCASE_csv_file(self.train_csv_filepath, "train")
-		self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "test")
+		if with_labels:
+			self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "test")
+		else:
+			self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "evaluate")
 		self.audio_files = self.train_data_list + self.test_data_list
 		self.audio_labels = self.train_label_list + self.test_label_list
 		self.audio_label_indices = self.train_label_indices + self.test_label_indices
@@ -119,6 +122,9 @@ class DatasetManager():
 			elif feature_index == 17:
 				lr = np.load("processed_data/mfcc_LR_spec.npy")
 				diff = np.load("processed_data/mfcc_diff_spec.npy")
+			elif feature_index == 18:
+				hpss = np.load("processed_data/hpss_eval.npy")
+				mono = np.load("processed_data/mono_eval.npy")
 
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
@@ -159,6 +165,8 @@ class DatasetManager():
 					mel_specs.append(ap.combine_left_right_with_LRdifference(lr[i], diff[i]))
 				elif feature_index == 17:
 					mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(lr[i], diff[i]))
+				elif feature_index == 18:
+					mel_specs.append(ap.combine_hpss_mono(hpss[i], mono[i]))
 
 			if filename:
 				np.save(filename, mel_specs)
@@ -232,15 +240,10 @@ class DatasetManager():
 			# Get dataset
 			dataset = []
 			dataset.append(self.test_data_list[i])
-			dataset.append(self.test_label_list[i])
-			dataset.append(self.test_label_indices[i])
 			test_csv_data.append(dataset)
 
 		# Write into test csv file
-		with open(test_filepath, 'w') as csvFile:
-			writer = csv.writer(csvFile)
-			writer.writerows(test_csv_data)
-		csvFile.close()
+		util.write_to_csv_file(test_csv_data, test_filepath)
 
 		#print("Test Data Labels generated in %s (test)" % test_filepath)
 		loghub.logMsg(msg="{}: Test Data Labels generated in {} (test)".format(__name__, test_filepath), otherlogs=["test_acc"])
@@ -321,16 +324,10 @@ class DatasetManager():
 		test_filepath = os.path.join(self.root_dir, test_csv)
 
 		# Write into train csv file
-		with open(train_filepath, 'w') as csvFile:
-			writer = csv.writer(csvFile)
-			writer.writerows(train_csv_data)
-		csvFile.close()
+		util.write_to_csv_file(train_csv_data, train_filepath)
 
 		# Write into test csv file
-		with open(test_filepath, 'w') as csvFile:
-			writer = csv.writer(csvFile)
-			writer.writerows(test_csv_data)
-		csvFile.close()
+		util.write_to_csv_file(test_csv_data, test_filepath)
 
 		#print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
 		loghub.logMsg(msg="{}: Data labels generated in {} (train) and {} (test)".format(__name__, train_filepath, test_filepath), otherlogs=["test_acc"])
@@ -420,8 +417,9 @@ class DatasetManager():
 					self.available_data_size += 1
 					# store the data
 					data_list.append(datapath)	
-					label_list.append(x_row[1])			# second column: labels
-					label_indices.append(x_row[2])		# third column: label indices (not used in this code)
+					if len(x_row) > 1:
+						label_list.append(x_row[1])			# second column: labels
+						label_indices.append(x_row[2])		# third column: label indices (not used in this code)
 
 		f.close()
 
@@ -453,8 +451,9 @@ class DCASEDataset(Dataset):
 
 				row = line.split(',')
 				data_list.append(row[0]) # first column in the csv, file names
-				label_list.append(row[1]) # second column, the labels
-				label_indices.append(row[2]) # third column, the label indices (not used in this code)
+				if len(row) > 1:
+					label_list.append(row[1]) # second column, the labels
+					label_indices.append(row[2]) # third column, the label indices (not used in this code)
 
 		self.root_dir = root_dir
 		self.transform = transform
@@ -478,11 +477,16 @@ class DCASEDataset(Dataset):
 		# Extract input feature
 		input_feat = self.data_manager.audio_data[ad_index]
 
-		# extract the label
-		label = np.asarray(self.default_labels.index(self.labels[idx]))
+		# Check if there is labels (evaluation data set has no labels)
+		if len(self.labels) > 0:
+			# extract the label
+			label = np.asarray(self.default_labels.index(self.labels[idx]))
 
-		# final sample
-		sample = (input_feat, label)
+			# final sample
+			sample = (input_feat, label)
+		else:
+			# final sample
+			sample = (input_feat, np.asarray(-1))		# no labels
 
 		# perform the transformation (normalization etc.), if required
 		if self.transform:

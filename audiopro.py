@@ -289,6 +289,11 @@ def combine_mfcc_left_right_with_LRdifference(leftright, diff):
 
 	return concat_mel_spec
 
+def combine_hpss_mono(hpss, mono):
+	concat_mel_spec = np.concatenate((hpss, mono), axis=0)
+
+	return concat_mel_spec
+
 
 
 

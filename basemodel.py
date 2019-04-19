@@ -73,7 +73,7 @@ def computeNormalized(norm_std, norm_mean, train_labels_dir, root_dir, data_mana
 
 
 def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of_channel, split_valid=False, saved_model_name="",
-	test_batch_size=16, batch_size=16, epochs=300, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
+	test_batch_size=16, batch_size=16, epochs=1, lr=0.01, no_cuda=False, seed=1, log_interval=10, save_model=True):
 	"""
 		Build and Train CNN model
 		
@@ -267,7 +267,7 @@ def buildCNNModel(train_csv, test_csv, norm_std, norm_mean, data_manager, num_of
 
 
 def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, num_of_channel, 
-	test_batch_size=16, no_cuda=False, seed=1):
+	with_labels, test_batch_size=16, no_cuda=False, seed=1):
 	"""
 		Test the trained CNN model
 
@@ -278,6 +278,7 @@ def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, 
 			norm_mean (string): file that contains the normalized mean 
 			data_manager (DataManager): contains all the loaded train/test dataset
 			num_of_channel (int): number of channels for input features
+			with_labels (bool): Indicator if test_data has labels
 
 		Optional Parameters
 			test_batch_size (int): input batch size of testing
@@ -363,7 +364,11 @@ def testCNNModel(saved_model_path, test_csv, norm_std, norm_mean, data_manager, 
 	model.load_state_dict(torch.load(saved_model_path))
 
 	# test the model
-	predictions = cnn.test(args, model, device, test_loader, "Testing Data")
+	if with_labels:
+		predictions = cnn.test(args, model, device, test_loader, "Testing Data")
+	else:
+		# Evaluation Datset (with no labels)
+		predictions = cnn.predict(model, device, test_loader)
 
 	#print("Model TESTING END.")
 	loghub.logMsg(msg="{}: Model TESTING END.".format(__name__), otherlogs=["test_acc"])
