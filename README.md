@@ -35,6 +35,7 @@ Ensure that the above packages are installed. Also ensure that there exists `log
 ### SCREEN COMMANDS
 - screen -S "session_name" --> create new screen
 - screen -R "session_name" --> Reattached to screen
+- screen -D "session_ID" --> detached an attached screen
 - screen -ls --> list all screen
 - echo $STY --> see whether you are inside a screen
 - ctrl a d --> detach from a screen
