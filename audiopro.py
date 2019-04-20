@@ -253,11 +253,12 @@ def extract_mfcc_spectrogram_for_right_channel(wav_name):
 	mfccs = np.reshape(mfccs, [1, mfccs.shape[0], mfccs.shape[1]])
 	return mfccs
 
-def extract_mfcc_spectrogram_for_left_and_right_channel(wav_name):
-
-	# Extract mel-spectrogram for left & right channel
-	left_mfcc_spec = extract_mfcc_spectrogram_for_left_channel(wav_name)
-	right_mfcc_spec = extract_mfcc_spectrogram_for_right_channel(wav_name)
+def combine_mfcc_left_and_right(wav_name, left_mfcc_spec=None, right_mfcc_spec=None):
+	# Check if there are preprocessed mel spectrogram
+	if left_mfcc_spec == None and right_mfcc_spec == None:
+		# Extract mel-spectrogram for left & right channel
+		left_mfcc_spec = extract_mfcc_spectrogram_for_left_channel(wav_name)
+		right_mfcc_spec = extract_mfcc_spectrogram_for_right_channel(wav_name)
 
 	# Concat the two spectrogram
 	concat_mfcc_spec = np.concatenate((left_mfcc_spec, right_mfcc_spec), axis=0)
