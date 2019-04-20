@@ -116,72 +116,120 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
-			if feature_index == 16:
-				lr = np.load("processed_data/LR_spec.npy")
-				diff = np.load("processed_data/diff_spec.npy")
-			elif feature_index == 17:
-				lr = np.load("processed_data/mfcc_LR_spec.npy")
-				diff = np.load("processed_data/mfcc_diff_spec.npy")
-			elif feature_index == 18:
-				hpss = np.load("processed_data/hpss_spec.npy")
-				mono = np.load("processed_data/mono_spec.npy")
-			elif feature_index == 19:
-				mono = np.load("processed_data/mono_spec.npy")
-				LRD = np.load("processed_data/LRD_spec.npy")
-			elif feature_index == 20:
-				mono = np.load("processed_data/mfcc_mono_spec.npy")
-				LRD = np.load("processed_data/mfcc_LRD_spec.npy")
-			elif feature_index == 21:
-				left = np.load("processed_data/left_eval.npy")
-				right = np.load("processed_data/right_eval.npy")
+			specA = specB = None
 
+			# Load preprocessed data if exists
+			if feature_index == 3:
+				if os.path.isfile("processed_data/left_spec.npy") and os.path.isfile("processed_data/right_spec.npy"):
+					specA = np.load("processed_data/left_spec.npy")
+					specB = np.load("processed_data/right_spec.npy")
+			elif feature_index == 6:
+				if os.path.isfile("processed_data/LR_spec.npy") and os.path.isfile("processed_data/diff_spec.npy"):
+					specA = np.load("processed_data/LR_spec.npy")
+					specB = np.load("processed_data/diff_spec.npy")
+			elif feature_index == 8:
+				if os.path.isfile("processed_data/hpss_spec.npy") and os.path.isfile("processed_data/mono_spec.npy"):
+					specA = np.load("processed_data/hpss_spec.npy")
+					specB = np.load("processed_data/mono_spec.npy")
+			elif feature_index == 15:
+				if os.path.isfile("processed_data/mfcc_LR_spec.npy") and os.path.isfile("processed_data/mfcc_diff_spec.npy"):
+					specA = np.load("processed_data/mfcc_LR_spec.npy")
+					specB = np.load("processed_data/mfcc_diff_spec.npy")
+			elif feature_index == 16:
+				if os.path.isfile("processed_data/hpssmono_spec.npy") and os.path.isfile("processed_data/LR_spec.npy"):
+					specA = np.load("processed_data/hpssmono_spec.npy")
+					specB = np.load("processed_data/LR_spec.npy")
+			elif feature_index == 17:
+				if os.path.isfile("processed_data/mono_spec.npy") and os.path.isfile("processed_data/LRD_spec.npy"):
+					specA = np.load("processed_data/mono_spec.npy")
+					specB = np.load("processed_data/LRD_spec.npy")
+			elif feature_index == 18:
+				if os.path.isfile("processed_data/mfcc_mono_spec.npy") and os.path.isfile("processed_data/mfcc_LRD_spec.npy"):
+					specA = np.load("processed_data/mfcc_mono_spec.npy")
+					specB = np.load("processed_data/mfcc_LRD_spec.npy")
+
+			# Extract features from audio file
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
 				if feature_index == 0:
+					# Extracting Mel Spectrogram for Mono Channel (1 channel)
 					mel_specs.append(ap.extract_mel_spectrogram_for_mono_channel(wav_name))
 				elif feature_index == 1:
+					# Extracting Mel Spectrogram for Left Channel (1 channel)
 					mel_specs.append(ap.extract_mel_spectrogram_for_left_channel(wav_name))
 				elif feature_index == 2:
+					# Extracting Mel Spectrogram for Right Channel (1 channel)
 					mel_specs.append(ap.extract_mel_spectrogram_for_right_channel(wav_name))
 				elif feature_index == 3:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name))
+					# Extracting Mel Spectrogram for left & right Channel (2 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_left_and_right_mel_spectrogram(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_left_and_right_mel_spectrogram(wav_name))
 				elif feature_index == 4:
-					mel_specs.append(ap.extract_mel_spectrogram_for_hpss(wav_name))
+					# Extracting Mel Spectrogram for difference of left & right Channel (1 channel)
+					mel_specs.append(ap.extract_mel_spectrogram_for_difference_of_left_right_channel(wav_name))
 				elif feature_index == 5:
-					mel_specs.append(ap.extract_mel_spectrogram_for_3f(wav_name))
+					# Extracting Mel Spectrogram for sum of left & right Channel (1 channel)
+					mel_specs.append(ap.extract_mel_spectrogram_for_sum_of_left_right_channel(wav_name))
 				elif feature_index == 6:
-					mel_specs.append(ap.extract_mfcc_for_mono_channel(wav_name))
+					# Extracting Mel Spectrogram of left & right & leftrightdiff Channel (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_left_right_with_LRdifference(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_left_right_with_LRdifference(wav_name))
 				elif feature_index == 7:
-					mel_specs.append(ap.extract_mfcc_spectrogram_for_left_channel(wav_name))
+					# Extracting Mel Spectrogram of mono Channel with hpss applied (2 channel)
+					mel_specs.append(ap.extract_mel_spectrogram_for_hpss(wav_name))
 				elif feature_index == 8:
-					mel_specs.append(ap.extract_mfcc_spectrogram_for_right_channel(wav_name))
+					# Extracting Mel Spectrogram of mono Channel & hpss (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_hpss_and_mono_mel_spectrogram(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_hpss_and_mono_mel_spectrogram(wav_name))
 				elif feature_index == 9:
-					mel_specs.append(ap.extract_mfcc_spectrogram_for_left_right_difference_channel(wav_name))
-				elif feature_index == 10:
+					# Extracting Chroma feature (1 channel)
 					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
-				elif feature_index == 11:
+				elif feature_index == 10:
+					# Extracting Zero Crossing feature (1 channel)
 					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
+				elif feature_index == 11:
+					# Extracting MFCC feature from mono channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_for_mono_channel(wav_name))
 				elif feature_index == 12:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_difference_channel(wav_name))
+					# Extracting MFCC feature from left channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_left_channel(wav_name))
 				elif feature_index == 13:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_right_sum_channel(wav_name))
+					# Extracting MFCC feature from right channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_right_channel(wav_name))
 				elif feature_index == 14:
-					mel_specs.append(ap.extract_early_fusion_left_right_3f(wav_name))
+					# Extracting MFCC feature from difference of left & right channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_difference_of_left_right_channel(wav_name))
 				elif feature_index == 15:
-					mel_specs.append(ap.extract_early_fusion_left_right_diff_mono(wav_name))
+					# Extracting MFCC feature from left & right & leftrightdiff channel (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(wav_name))
 				elif feature_index == 16:
-					mel_specs.append(ap.combine_left_right_with_LRdifference(lr[i], diff[i]))
+					# Combine left mel + right mel + hpss + mono mel
+					if specA != None and specB != None:
+						mel_specs.append(ap.extract_early_fusion_left_right_3f(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.extract_early_fusion_left_right_3f(wav_name))
 				elif feature_index == 17:
-					mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(lr[i], diff[i]))
+					# Combine left mel + right mel + diff mel + mono mel
+					if specA != None and specB != None:
+						mel_specs.append(ap.extract_early_fusion_left_right_diff_mono(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.extract_early_fusion_left_right_diff_mono(wav_name))
 				elif feature_index == 18:
-					mel_specs.append(ap.combine_hpss_mono(hpss[i], mono[i]))
-				elif feature_index == 19:
-					mel_specs.append(ap.combine_mono_LRD(mono[i], LRD[i]))
-				elif feature_index == 20:
-					mel_specs.append(ap.combine_mfcc_mono_LRD(mono[i], LRD[i]))
-				elif feature_index == 21:
-					mel_specs.append(ap.combine_hpss_mono(left[i], right[i]))
+					# Combine left mfcc + right mfcc + diff mfcc + mono mfcc
+					if specA != None and specB != None:
+						mel_specs.append(ap.extract_early_fusion_MFCC_left_right_diff_mono(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.extract_early_fusion_MFCC_left_right_diff_mono(wav_name))
 
 			if filename:
 				np.save(filename, mel_specs)

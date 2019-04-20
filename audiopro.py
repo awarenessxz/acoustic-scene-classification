@@ -8,7 +8,6 @@ import numpy as np
 # import Librosa, tool for extracting features from audio data
 import librosa
 
-
 def extract_mel_spectrogram_for_mono_channel(wav_name):
 	# load the wav file with 22.05 KHz Sampling rate and only one channel
 	audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
@@ -66,20 +65,22 @@ def extract_mel_spectrogram_for_right_channel(wav_name):
 
 	return logmel
 
-def extract_mel_spectrogram_for_left_and_right_channel(wav_name):
-	# load the wav file with 22.05 KHz Sampling rate and only one channel
-	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
+def combine_left_and_right_mel_spectrogram(wav_name, left_mel_spec=None, right_mel_spec=None):
+	# Check if there are preprocessed mel spectrogram
+	if left_mel_spec == None and right_mel_spec == None:
+		# load the wav file with 22.05 KHz Sampling rate and only one channel
+		audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
 
-	# Extract mel-spectrogram for left & right channel
-	left_mel_spec = extract_mel_spectrogram_for_left_channel(wav_name)
-	right_mel_spec = extract_mel_spectrogram_for_right_channel(wav_name)
+		# Extract mel-spectrogram for left & right channel
+		left_mel_spec = extract_mel_spectrogram_for_left_channel(wav_name)
+		right_mel_spec = extract_mel_spectrogram_for_right_channel(wav_name)
 
 	# Concat the two spectrogram
 	concat_mel_spec = np.concatenate((left_mel_spec, right_mel_spec), axis=0)
 
 	return concat_mel_spec
 
-def extract_mel_spectrogram_for_left_right_difference_channel(wav_name):
+def extract_mel_spectrogram_for_difference_of_left_right_channel(wav_name):
 	# load the wav file with 22.05 KHz Sampling rate and only one channel
 	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
 
@@ -100,7 +101,7 @@ def extract_mel_spectrogram_for_left_right_difference_channel(wav_name):
 
 	return logmel
 
-def extract_mel_spectrogram_for_left_right_sum_channel(wav_name):
+def extract_mel_spectrogram_for_sum_of_left_right_channel(wav_name):
 	# load the wav file with 22.05 KHz Sampling rate and only one channel
 	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
 	
@@ -120,6 +121,19 @@ def extract_mel_spectrogram_for_left_right_sum_channel(wav_name):
 	logmel = np.reshape(logmel, [1, logmel.shape[0], logmel.shape[1]])
 
 	return logmel
+
+def combine_left_right_with_LRdifference(wav_name, leftright_spec=None, diff_spec=None):
+	# Check if there are preprocessed mel spectrogram
+	if leftright_spec == None and diff_spec == None:
+		# Extract leftright spec
+		leftright_spec = combine_left_and_right_mel_spectrogram(wav_name)
+		# Extract diff spec
+		diff_spec = extract_mel_spectrogram_for_difference_of_left_right_channel(wav_name)
+
+	# Concat the three spectrogram
+	concat_mel_spec = np.concatenate((leftright_spec, diff_spec), axis=0)
+
+	return concat_mel_spec
 
 def extract_mel_spectrogram_for_hpss(wav_name):
 	# load the wav file with 22.05 KHz Sampling rate and only one channel
@@ -144,18 +158,40 @@ def extract_mel_spectrogram_for_hpss(wav_name):
 
 	return hpss_concat
 
-def extract_mel_spectrogram_for_3f(wav_name):
-	# load the wav file with 22.05 KHz Sampling rate and only one channel
-	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
+def combine_hpss_and_mono_mel_spectrogram(wav_name, hpss_spec=None, mono_spec=None):
+	# Check if there are preprocessed mel spectrogram
+	if hpss_spec == None and mono_spec == None: 
+		# load the wav file with 22.05 KHz Sampling rate and only one channel
+		audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
 
-	# Extract mel-spectrogram for left & right channel
-	mono_spec = extract_mel_spectrogram_for_mono_channel(wav_name)
-	hpss_spec = extract_mel_spectrogram_for_hpss(wav_name)
+		# Extract mel-spectrogram for left & right channel
+		mono_spec = extract_mel_spectrogram_for_mono_channel(wav_name)
+		hpss_spec = extract_mel_spectrogram_for_hpss(wav_name)
 
 	# Concat the two spectrogram
 	concat_mel_spec = np.concatenate((hpss_spec, mono_spec), axis=0)
 
 	return concat_mel_spec
+
+def extract_chroma_for_mono_channel(wav_name):
+	# load the wav file with 22.05 KHz Sampling rate and only one channel
+	audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
+
+	S = np.abs(librosa.stft(audio, n_fft=883, hop_length=441)) ** 2
+	chroma = librosa.feature.chroma_stft(S=S, sr=sr)
+
+	# add an extra column for the audio channel
+	chroma = np.reshape(chroma, [1, chroma.shape[0], chroma.shape[1]])
+	return chroma
+
+def extract_zero_crossing_for_mono_channel(wav_name):
+	# load the wav file with 22.05 KHz Sampling rate and only one channel
+	audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
+	zero_crossing = librosa.feature.zero_crossing_rate(audio, hop_length=441)
+
+	# add an extra column for the audio channel
+	zero_crossing = np.reshape(zero_crossing, [1, zero_crossing.shape[0], zero_crossing.shape[1]])
+	return zero_crossing
 
 def extract_mfcc_for_mono_channel(wav_name):
 
@@ -212,7 +248,7 @@ def extract_mfcc_spectrogram_for_right_channel(wav_name):
 	mfccs = np.reshape(mfccs, [1, mfccs.shape[0], mfccs.shape[1]])
 	return mfccs
 
-def extract_mfcc_spectrogram_for_left_right_difference_channel(wav_name):
+def extract_mfcc_spectrogram_for_difference_of_left_right_channel(wav_name):
 
 	# load the wav file with 22.05 KHz Sampling rate and only one channel
 	audio, sr = librosa.core.load(wav_name, sr=22050, mono=False)
@@ -232,75 +268,55 @@ def extract_mfcc_spectrogram_for_left_right_difference_channel(wav_name):
 	mfccs = np.reshape(mfccs, [1, mfccs.shape[0], mfccs.shape[1]])
 	return mfccs
 
-def extract_chroma_for_mono_channel(wav_name):
-	# load the wav file with 22.05 KHz Sampling rate and only one channel
-	audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
+def combine_mfcc_left_right_with_LRdifference(wav_name, mfcc_leftright_spec=None, mfcc_diff_spec=None):
+	# Check if there are preprocessed mel spectrogram
+	if mfcc_leftright_spec == None and mfcc_diff_spec == None:
+		# Extract leftright spec
+		mfcc_leftright_spec = combine_left_and_right_mel_spectrogram(wav_name)
+		# Extract diff spec
+		mfcc_diff_spec = extract_mel_spectrogram_for_difference_of_left_right_channel(wav_name)
+	
+	# Concat the three spectrogram
+	concat_mel_spec = np.concatenate((mfcc_leftright_spec, mfcc_diff_spec), axis=0)
 
-	S = np.abs(librosa.stft(audio, n_fft=883, hop_length=441)) ** 2
-	chroma = librosa.feature.chroma_stft(S=S, sr=sr)
+	return concat_mel_spec
 
-	# add an extra column for the audio channel
-	chroma = np.reshape(chroma, [1, chroma.shape[0], chroma.shape[1]])
-	return chroma
-
-def extract_zero_crossing_for_mono_channel(wav_name):
-	# load the wav file with 22.05 KHz Sampling rate and only one channel
-	audio, sr = librosa.core.load(wav_name, sr=22050, mono=True)
-	zero_crossing = librosa.feature.zero_crossing_rate(audio, hop_length=441)
-
-	# add an extra column for the audio channel
-	zero_crossing = np.reshape(zero_crossing, [1, zero_crossing.shape[0], zero_crossing.shape[1]])
-	return zero_crossing
-
-
-def extract_early_fusion_left_right_3f(wav_name):
-	# Extract 3f
-	hpssmono_spec = extract_mel_spectrogram_for_3f(wav_name)
-	# Extract left right
-	lr_spec = extract_mel_spectrogram_for_left_and_right_channel(wav_name)
+def extract_early_fusion_left_right_3f(wav_name, hpssmono_spec=None, lr_spec=None):
+	# Check if there are preprocessed mel spectrogram
+	if hpssmono_spec == None and lr_spec == None: 	
+		# Extract 3f
+		hpssmono_spec = combine_hpss_and_mono_mel_spectrogram(wav_name)
+		# Extract left right
+		lr_spec = combine_left_and_right_mel_spectrogram(wav_name)
 
 	# Concat the two spectrogram
 	concat_mel_spec = np.concatenate((hpssmono_spec, lr_spec), axis=0)
 
 	return concat_mel_spec
 
-def extract_early_fusion_left_right_diff_mono(wav_name):
-	# Extract mono
-	LR_spec = extract_mel_spectrogram_for_left_and_right_channel(wav_name)
-	# Extract leftrigth
-	mono_spec = extract_mel_spectrogram_for_mono_channel(wav_name)
-	# Extract diff
-	diff_spec = extract_mfcc_spectrogram_for_left_right_difference_channel(wav_name)
+def extract_early_fusion_left_right_diff_mono(wav_name, mono_spec, LRD_spec):
+	# Check if there are preprocessed mel spectrogram
+	if mono_spec == None and LRD_spec == None: 
+		# Extract mono
+		mono_spec = extract_mel_spectrogram_for_mono_channel(wav_name)
+		# Extract leftrightDiff
+		LRD_spec = combine_left_right_with_LRdifference(wav_name)
 
 	# Concat the three spectrogram
-	concat_mel_spec = np.concatenate((mono_spec, LR_spec, diff_spec), axis=0)
+	concat_mel_spec = np.concatenate((mono_spec, LRD_spec), axis=0)
 
 	return concat_mel_spec
 
-def combine_left_right_with_LRdifference(leftright, diff):
+def extract_early_fusion_MFCC_left_right_diff_mono(wav_name, mfcc_mono_spec, mfcc_LRD_spec):
+	# Check if there are preprocessed mel spectrogram
+	if mfcc_mono_spec == None and mfcc_LRD_spec == None: 
+		# Extract mono
+		mfcc_mono_spec = extract_mfcc_for_mono_channel(wav_name)
+		# Extract leftrightDiff
+		mfcc_LRD_spec = combine_mfcc_left_right_with_LRdifference(wav_name)
+
 	# Concat the three spectrogram
-	concat_mel_spec = np.concatenate((leftright, diff), axis=0)
-
-	return concat_mel_spec
-
-def combine_mfcc_left_right_with_LRdifference(leftright, diff):
-	# Concat the three spectrogram
-	concat_mel_spec = np.concatenate((leftright, diff), axis=0)
-
-	return concat_mel_spec
-
-def combine_hpss_mono(hpss, mono):
-	concat_mel_spec = np.concatenate((hpss, mono), axis=0)
-
-	return concat_mel_spec
-
-def combine_mono_LRD(mono, lrd):
-	concat_mel_spec = np.concatenate((mono, lrd), axis=0)
-
-	return concat_mel_spec
-
-def combine_mfcc_mono_LRD(mono, lrd):
-	concat_mel_spec = np.concatenate((mono, lrd), axis=0)
+	concat_mel_spec = np.concatenate((mfcc_mono_spec, mfcc_LRD_spec), axis=0)
 
 	return concat_mel_spec
 
