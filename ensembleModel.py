@@ -8,12 +8,14 @@ import os
 import torch
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
 
 # Import own modules
 import loghub
 import basemodel as bm
 import utility as util
 from dataset import DatasetManager, DCASEDataset
+import mltoolkit as mk
 from mltoolkit import ClassifierModel
 from utility import StopWatch
 
@@ -328,6 +330,16 @@ def predict_with_stack_model(with_labels=True):
 		#print("Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(correct, total, percentage))
 		loghub.logMsg(msg="{}: Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(
 			__name__, correct, total, percentage), otherlogs=["test_acc"])
+
+		np.set_printoptions(precision=2)
+
+		# Plot non-normalized confusion matrix
+		mk.plot_confusion_matrix(data_manager.test_label_indices, predicts, classes=[
+			'airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall', 
+			'street_pedestrian', 'street_traffic', 'tram'
+			], title='Confusion matrix')
+
+		plt.show()
 	else:
 		# Evaluation Datset (with no labels)
 		# Store the prediction results 

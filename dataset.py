@@ -95,8 +95,7 @@ class DatasetManager():
 		"""
 			filename (string): name of the file to save the extracted features eg feature.npy
 			feature_index (int): index to indicate which feature to extract
-
-			Load or Extract the features for all audio files. 
+			Load or Extract the features for all audio files.
 		"""
 
 		# check that data have been loaded
@@ -243,13 +242,11 @@ class DatasetManager():
 	def apply_k_fold(self, K=5):
 		"""
 			K (int): K folds
-
 			Split train data into K folds and returns an array of an array of indices
 				- Fold #1 (train_indices, test_indices)
 				- ....
 				- Fold #K (train_indices, test_indices)
 		"""
-		
 		# check that data have been loaded
 		if not self.train_data_list:
 			#print("Data have not been loaded. Running data_manager.load_all_data()...")
@@ -313,6 +310,32 @@ class DatasetManager():
 
 		return test_filepath
 
+	def prepare_single_data(self, filename, label, labelidx, test_csv="test_dataset.csv"):
+		"""
+			This is used when testing model. Instead of preparing both train/test csv in prepare_data().
+			This function only prepares the test.csv
+		"""
+
+		# Prepare csv file path
+		test_filepath = os.path.join(self.root_dir, test_csv)
+
+		# Extract data for test.csv
+		test_csv_data = []
+		dataset = []
+		dataset.append(filename)
+		dataset.append(label)
+		dataset.append(labelidx)
+		test_csv_data.append(dataset)
+
+		# Write into test csv file
+		with open(test_filepath, 'w') as csvFile:
+			writer = csv.writer(csvFile)
+			writer.writerows(test_csv_data)
+		csvFile.close()
+
+		print("Test Data Labels generated in %s (test)" % test_filepath)
+
+		return test_filepath
 
 	def prepare_data(self, train_indices=None, test_indices=None, train_only=False, train_csv="train_dataset.csv", test_csv="test_dataset.csv"):
 		"""
@@ -321,11 +344,10 @@ class DatasetManager():
 			train_only (bool): indicator on whether train_indices and test_indices are all from training data
 			train_csv (string): filename of newly generated train dataset
 			test_csv (string): filename of newly generated test dataset
-
-			Prepare data for training/testing model. As we loaded all the features and store them into a 
-			single data file, this function is to generate a train.csv and test.csv which will be used 
-			to build the model. The index of audio files in train.csv/test.csv will be map to the index 
-			of the main data file. Purpose is to improve efficiency by not recomputing/extracting all 
+			Prepare data for training/testing model. As we loaded all the features and store them into a
+			single data file, this function is to generate a train.csv and test.csv which will be used
+			to build the model. The index of audio files in train.csv/test.csv will be map to the index
+			of the main data file. Purpose is to improve efficiency by not recomputing/extracting all
 			the features in the audio files whenever the train/test data changes
 		"""
 
@@ -424,13 +446,12 @@ class DatasetManager():
 			Split the data into the different labels
 		"""
 
-		data_list = [[],[],[],[],[],[],[],[],[],[]]	
-		label_list = [[],[],[],[],[],[],[],[],[],[]]
-		label_indices = [[],[],[],[],[],[],[],[],[],[]]	
+		data_list = [[], [], [], [], [], [], [], [], [], []]
+		label_list = [[], [], [], [], [], [], [], [], [], []]
+		label_indices = [[], [], [], [], [], [], [], [], [], []]
 
 		for i in range(len(self.audio_label_indices)):
 			class_index = int(self.audio_label_indices[i])
-
 			data_list[class_index].append(self.audio_files[i])
 			label_list[class_index].append(self.audio_labels[i])
 			label_indices[class_index].append(self.audio_label_indices[i])
@@ -556,10 +577,4 @@ class DCASEDataset(Dataset):
 			sample = self.transform(sample)
 
 		return sample
-
-
-
-
-
-
 
