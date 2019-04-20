@@ -28,23 +28,23 @@ from utility import StopWatch
 '''
 
 # Set the parameters below depending on the features to be extracted
-num_of_channel = 4
-feature_index = 20									# determine which feature to extract
-preprocessed_features = "processed_data/EF_MFCC_MLRD_spec.npy"
-preprocessed_norm_mean_file = "processed_data/EF_MFCC_MLRD_norm_mean.npy"
-preprocessed_norm_std_file = "processed_data/EF_MFCC_MLRD_norm_std.npy"
-saved_model = "processed_data/EF_MFCC_MLRD_TRAIN_BaselineASC.pt"
+num_of_channel = 1
+feature_index = 14									# determine which feature to extract
+preprocessed_features = "processed_data/mfcc_diff_spec.npy"
+preprocessed_norm_mean_file = "processed_data/mfcc_diff_norm_mean.npy"
+preprocessed_norm_std_file = "processed_data/mfcc_diff_norm_std.npy"
+saved_model = "processed_data/mfcc_diff_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
 	# 4 = hpss spectrogram (2 channel)
 	# 5 = 3f spectrogram (3 channel)
-temp_train_csv_file = "EF_MFCC_train_dataset.csv"
-temp_test_csv_file = "EF_MFCC_test_dataset.csv"
+temp_train_csv_file = "mfcc_diff_train_dataset.csv"
+temp_test_csv_file = "mfcc_diff_test_dataset.csv"
 
-log_file = "EF_MFCC_TRAIN_main.log"
-log_test = "EF_MFCC_TRAIN_test.log"
+log_file = "cnn_main11.log"
+log_test = "cnn_test11.log"
 '''
 ////////////////////////////////////////////////////////////////////////////////////
 ///					Functions / Classes											////
