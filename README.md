@@ -15,6 +15,12 @@ We create a website for our bonus section. The front end is written with html, t
 
 
 ### Running 
+First you need to install portaudio:
+
+- brew install portaudio
+- pip install pyAudio
+
+After that can run the web.
 
 To run the code: `app.py`. 
 
