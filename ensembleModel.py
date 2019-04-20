@@ -8,7 +8,7 @@ import os
 import torch
 import numpy as np
 import pickle
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 # Import own modules
 import loghub
@@ -27,7 +27,7 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [6, 17]
+feat_indices = [11, 16]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
 preprocessed_features = ["mfcc_mono_spec.npy", "mfcc_LRD_spec.npy"] 
@@ -37,12 +37,12 @@ num_of_channels = [1, 3]
 # These are for step 3. Cross validation of training data to generate train_meta [Minimum 2 fold]
 K_FOLD = 3
 fold_norm_means = [
-	["mfcc_mono_norm_mean.npy", "mfcc_mono_norm_mean.npy", "mfcc_mono_norm_mean.npy"],
-	["mfcc_LRD_norm_mean.npy", "mfcc_LRD_norm_mean.npy", "mfcc_LRD_norm_mean.npy"],
+	["mfcc_mono_mean_f0.npy", "mfcc_mono_mean_f1.npy", "mfcc_mono_mean_f2.npy"],
+	["mfcc_LRD_mean_f0.npy", "mfcc_LRD_mean_f1.npy", "mfcc_LRD_mean_f2.npy"],
 ]
 fold_norm_stds = [
-	["mfcc_mono_norm_std.npy", "mfcc_mono_norm_std.npy", "mfcc_mono_norm_std.npy"],
-	["mfcc_LRD_norm_std.npy", "mfcc_LRD_norm_std.npy", "mfcc_LRD_norm_std.npy"],
+	["mfcc_mono_stds_f0.npy", "mfcc_mono_stds_f1.npy", "mfcc_mono_stds_f2.npy"],
+	["mfcc_LRD_stds_f0.npy", "mfcc_LRD_stds_f1.npy", "mfcc_LRD_stds_f2.npy"],
 ]
 
 # These are for step 4 to generate test_meta
@@ -52,16 +52,16 @@ save_models = ["LF_mfcc_mono_cnn.pt", "LF_mfcc_LRD_cnn.pt"]
 
 # Ensemble Model Parameters
 stacked_model_name = "stackedModel_LF_MFCC.pkl"
-predict_results_csv = "eval_results_LF_MFCC_1.csv"			# csv file to store prediction results
+predict_results_csv = "eval_results_LF_MFCC.csv"			# csv file to store prediction results
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "LF_MFCC_PREDICT_1_main.log"
-test_accu_log = "LF_MFCC_PREDICT_1_accu.log"
+main_log = "LF_MFCC_main.log"
+test_accu_log = "LF_MFCC_test_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "LF_MFCC_test_dataset.csv"
-temp_train_csv_file = "LF_MFCC_train_dataset.csv"
+temp_test_csv_file = "test_dataset.csv"
+temp_train_csv_file = "train_dataset.csv"
 
 # Dataset directory
 train_labels_dir = "../Dataset/train/train_labels.csv"
@@ -97,7 +97,7 @@ def build_stack_model():
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
-	data_manager.load_all_data(include_test=False)
+	data_manager.load_all_data(include_test=True)
 
 
 	# 1. Partition Training Data into K folds #############################################################################
@@ -331,15 +331,15 @@ def predict_with_stack_model(with_labels=True):
 		loghub.logMsg(msg="{}: Stacked Model Prediction Accuracy: {}/{} ({:.0f}%)".format(
 			__name__, correct, total, percentage), otherlogs=["test_acc"])
 
-		np.set_printoptions(precision=2)
+		#np.set_printoptions(precision=2)
 
 		# Plot non-normalized confusion matrix
-		mk.plot_confusion_matrix(data_manager.test_label_indices, predicts, classes=[
-			'airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall', 
-			'street_pedestrian', 'street_traffic', 'tram'
-			], title='Confusion matrix')
+		#mk.plot_confusion_matrix(data_manager.test_label_indices, predicts, classes=[
+		#	'airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall', 
+		#	'street_pedestrian', 'street_traffic', 'tram'
+		#	], title='Confusion matrix')
 
-		plt.show()
+		#plt.show()
 	else:
 		# Evaluation Datset (with no labels)
 		# Store the prediction results 
@@ -398,8 +398,8 @@ if __name__ == '__main__':
 	process_arguments(parser)
 
 	# 2. Set up logging
-	loghub.init_main_logger(os.path.join("log_files", main_log))
-	loghub.setup_logger("test_acc", os.path.join("log_files", test_accu_log))
+	loghub.init_main_logger(os.path.join("log", main_log))
+	loghub.setup_logger("test_acc", os.path.join("log", test_accu_log))
 
 	# 3. Run Ensemble Learning 
 	if ensemble_mode == 0:

@@ -9,7 +9,7 @@ def preprocessManual():
 	"""
 
 	fid = 21
-	name = "processed_data/LR_eval.npy"
+	name = "processed_data/mfcc_LRD_eval.npy"
 	#norm_mean = "processed_data/EF_MLRD_norm_mean.npy"
 	#norm_std = "processed_data/EF_MLRD_norm_std.npy"
 
