@@ -398,8 +398,8 @@ if __name__ == '__main__':
 	process_arguments(parser)
 
 	# 2. Set up logging
-	loghub.init_main_logger(os.path.join("log", main_log))
-	loghub.setup_logger("test_acc", os.path.join("log", test_accu_log))
+	loghub.init_main_logger(os.path.join("log_files", main_log))
+	loghub.setup_logger("test_acc", os.path.join("log_files", test_accu_log))
 
 	# 3. Run Ensemble Learning 
 	if ensemble_mode == 0:
