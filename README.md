@@ -24,13 +24,9 @@ The dataset for this project is the TUT Urban Acoustic Scenes 2018 dataset, cons
 
 ---
 
-# Running the code
+# Project Environment Set up
 
-There are two parts to our project. For the first part, we coded a classifier model using stacked ensembling of multiple CNN model. The second part is the bonus section where we used a web application to illustrate real life usage.
-
-### Environment Settings
-
-The folowing are the list of packages used in our project. Install them using the pip commands. Refer to the `requirements.txt` for more details.
+Ensure that the following packages are installed. Also ensure that there exists `log_files` and `processed_data` directories. Download the dataset. Install them using the pip commands. Refer to the `requirements.txt` for more details.
 
 - Python 3.6.4
 - torchvision
@@ -47,9 +43,10 @@ To install pyAudio:
 - brew install portaudio
 - pip install pyAudio
 
-### Project Set up
 
-Ensure that the above packages are installed. Also ensure that there exists `log_files` and `processed_data` directories. 
+# Running the code
+
+There are two parts to our project. For the first part, we coded a classifier model using stacked ensembling of multiple CNN model. The second part is the bonus section where we used a web application to illustrate real life usage.
 
 ## Classifier Model (Part 1)
 
