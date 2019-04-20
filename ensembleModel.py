@@ -25,48 +25,48 @@ from utility import StopWatch
 '''
 
 # NOTE: The index of all the lists below corresponds to 1 feature AKA 1 model
-feat_indices = [5, 5]
+feat_indices = [6, 17]
 
 # These are for step 0 when loading the features (refer to readme for feature index.)
-preprocessed_features = ["3F_spec.npy", "3F_spec.npy"] 
-preprocessed_features_test = ["monohpss_eval.npy", "monohpss_eval.npy"]
-num_of_channels = [3, 3]		
+preprocessed_features = ["mfcc_mono_spec.npy", "mfcc_LRD_spec.npy"] 
+preprocessed_features_test = ["mfcc_mono_eval.npy", "mfcc_LRD_eval.npy"]
+num_of_channels = [1, 3]		
 
 # These are for step 3. Cross validation of training data to generate train_meta [Minimum 2 fold]
 K_FOLD = 3
 fold_norm_means = [
-	["test_3channel_mean.npy", "test_3channel_mean.npy", "test_3channel_mean.npy"],
-	["test_3channel_mean.npy", "test_3channel_mean.npy", "test_3channel_mean.npy"],
+	["mfcc_mono_norm_mean.npy", "mfcc_mono_norm_mean.npy", "mfcc_mono_norm_mean.npy"],
+	["mfcc_LRD_norm_mean.npy", "mfcc_LRD_norm_mean.npy", "mfcc_LRD_norm_mean.npy"],
 ]
 fold_norm_stds = [
-	["test_3channel_std.npy", "test_3channel_std.npy", "test_3channel_std.npy"],
-	["test_3channel_std.npy", "test_3channel_std.npy", "test_3channel_std.npy"],
+	["mfcc_mono_norm_std.npy", "mfcc_mono_norm_std.npy", "mfcc_mono_norm_std.npy"],
+	["mfcc_LRD_norm_std.npy", "mfcc_LRD_norm_std.npy", "mfcc_LRD_norm_std.npy"],
 ]
 
 # These are for step 4 to generate test_meta
-norm_means = ["test_3channel_mean.npy", "test_3channel_mean.npy"]
-norm_stds = ["test_3channel_std.npy", "test_3channel_std.npy"]
-save_models = ["test_cnn.pt", "test_cnn.pt"]
+norm_means = ["mfcc_mono_norm_mean.npy", "mfcc_LRD_norm_mean.npy"]
+norm_stds = ["mfcc_mono_norm_std.npy", "mfcc_LRD_norm_std.npy"]
+save_models = ["LF_mfcc_mono_cnn.pt", "LF_mfcc_LRD_cnn.pt"]
 
 # Ensemble Model Parameters
-stacked_model_name = "stackedModel_EXP.pkl"
-predict_results_csv = "eval_results.csv"			# csv file to store prediction results
+stacked_model_name = "stackedModel_LF_MFCC.pkl"
+predict_results_csv = "eval_results_LF_MFCC_1.csv"			# csv file to store prediction results
 ensemble_mode = 0			# 0 = build, 1 = predict
 
 # Logging Files
-main_log = "EXP_main.log"
-test_accu_log = "EXP_test_accu.log"
+main_log = "LF_MFCC_PREDICT_1_main.log"
+test_accu_log = "LF_MFCC_PREDICT_1_accu.log"
 
 # Temporary csv file (If running program multiple times, ensure this file is different. Otherwise it will overwrite)
-temp_test_csv_file = "exp_test_dataset.csv"
-temp_train_csv_file = "exp_train_dataset.csv"
+temp_test_csv_file = "LF_MFCC_test_dataset.csv"
+temp_train_csv_file = "LF_MFCC_train_dataset.csv"
 
 # Dataset directory
 train_labels_dir = "../Dataset/train/train_labels.csv"
 test_labels_dir = "../Dataset/test/test_labels.csv"
 eval_labels_dir = "../Dataset/evaluate/evaluate_labels.csv" 
 root_dir = "../Dataset"
-processed_root_dir = "backup/processed"
+processed_root_dir = "processed_data"
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +95,7 @@ def build_stack_model():
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
-	data_manager.load_all_data(include_test=True)
+	data_manager.load_all_data(include_test=False)
 
 
 	# 1. Partition Training Data into K folds #############################################################################

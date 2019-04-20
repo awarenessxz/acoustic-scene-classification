@@ -294,6 +294,16 @@ def combine_hpss_mono(hpss, mono):
 
 	return concat_mel_spec
 
+def combine_mono_LRD(mono, lrd):
+	concat_mel_spec = np.concatenate((mono, lrd), axis=0)
+
+	return concat_mel_spec
+
+def combine_mfcc_mono_LRD(mono, lrd):
+	concat_mel_spec = np.concatenate((mono, lrd), axis=0)
+
+	return concat_mel_spec
+
 
 
 

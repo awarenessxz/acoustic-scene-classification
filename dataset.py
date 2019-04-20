@@ -123,8 +123,17 @@ class DatasetManager():
 				lr = np.load("processed_data/mfcc_LR_spec.npy")
 				diff = np.load("processed_data/mfcc_diff_spec.npy")
 			elif feature_index == 18:
-				hpss = np.load("processed_data/hpss_eval.npy")
-				mono = np.load("processed_data/mono_eval.npy")
+				hpss = np.load("processed_data/hpss_spec.npy")
+				mono = np.load("processed_data/mono_spec.npy")
+			elif feature_index == 19:
+				mono = np.load("processed_data/mono_spec.npy")
+				LRD = np.load("processed_data/LRD_spec.npy")
+			elif feature_index == 20:
+				mono = np.load("processed_data/mfcc_mono_spec.npy")
+				LRD = np.load("processed_data/mfcc_LRD_spec.npy")
+			elif feature_index == 21:
+				left = np.load("processed_data/left_eval.npy")
+				right = np.load("processed_data/right_eval.npy")
 
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
@@ -167,6 +176,12 @@ class DatasetManager():
 					mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(lr[i], diff[i]))
 				elif feature_index == 18:
 					mel_specs.append(ap.combine_hpss_mono(hpss[i], mono[i]))
+				elif feature_index == 19:
+					mel_specs.append(ap.combine_mono_LRD(mono[i], LRD[i]))
+				elif feature_index == 20:
+					mel_specs.append(ap.combine_mfcc_mono_LRD(mono[i], LRD[i]))
+				elif feature_index == 21:
+					mel_specs.append(ap.combine_hpss_mono(left[i], right[i]))
 
 			if filename:
 				np.save(filename, mel_specs)

@@ -61,7 +61,6 @@ def write_to_csv_file(data, filename, header=None):
 		writer.writerows(data)
 	csvFile.close()
 
-
 '''
 ////////////////////////////////////////////////////////////////////////////////////
 ///					Useful Classes												////
