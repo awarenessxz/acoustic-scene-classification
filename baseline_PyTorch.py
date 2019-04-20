@@ -15,6 +15,7 @@ from torchvision import transforms, utils
 from torch.utils.data import DataLoader
 
 # import our own tools
+import loghub
 import cnnmodel as cnn
 from cnnmodel import BaselineASC
 from dataset import DCASEDataset, DatasetManager
@@ -28,19 +29,22 @@ from utility import StopWatch
 
 # Set the parameters below depending on the features to be extracted
 num_of_channel = 1
-feature_index = 0									# determine which feature to extract
-preprocessed_features = "mono_spec.npy"
-preprocessed_norm_mean_file = "mono_norm_mean.npy"
-preprocessed_norm_std_file = "mono_norm_std.npy"
-saved_model = "mono_BaselineASC.pt"
+feature_index = 14									# determine which feature to extract
+preprocessed_features = "processed_data/mfcc_diff_spec.npy"
+preprocessed_norm_mean_file = "processed_data/mfcc_diff_norm_mean.npy"
+preprocessed_norm_std_file = "processed_data/mfcc_diff_norm_std.npy"
+saved_model = "processed_data/mfcc_diff_BaselineASC.pt"
 	# 0 = mono spectrogram (1 channel) 
 	# 1 = left spectrogram (1 channel) 
 	# 2 = right spectrogram (1 channel)
 	# 3 = left & right spectrogram (2 channel)
 	# 4 = hpss spectrogram (2 channel)
 	# 5 = 3f spectrogram (3 channel)
+temp_train_csv_file = "mfcc_diff_train_dataset.csv"
+temp_test_csv_file = "mfcc_diff_test_dataset.csv"
 
-
+log_file = "cnn_main11.log"
+log_test = "cnn_test11.log"
 '''
 ////////////////////////////////////////////////////////////////////////////////////
 ///					Functions / Classes											////
@@ -64,7 +68,7 @@ def NormalizeData(train_labels_dir, root_dir, dcase_dataset):
 		sample = dcase_dataset[rand[i]]
 		data, label = sample
 		# print because we like to see it working
-		print('NORMALIZATION (FEATURE SCALING) : ' + str(i) + ' - data shape: ' + str(data.shape) + ', label: ' + str(label) + ', current accumulation size: ' + str(melConcat.shape))
+		loghub.logMsg(msg="{}: NORMALIZATION (FEATURE SCALING) : {} - data shape: {}, label: {}, current accumulation size: {}".format(__name__, str(i), str(data.shape), str(label), str(melConcat.shape)), level="info")
 		if flag == 0:
 				# get the data and init melConcat for the first time
 			melConcat = data
@@ -126,18 +130,17 @@ def main():
 
 	# Load all the dataset
 	data_manager = DatasetManager(train_labels_dir, test_labels_dir, root_dir)
-	data_manager.load_all_data()
+	data_manager.load_all_data(include_test=False)
 
 	# Load/Preprocess Feature for model
 	data_manager.load_feature(feature_index, preprocessed_features)
 
 	# Prepare data
-	train = np.arange(data_manager.get_train_data_size())		# Train indices = all of train data
-	test = np.arange(data_manager.get_test_data_size())			# Test indices = all of test data
-	train_labels_dir, test_labels_dir = data_manager.prepare_data(train_indices=train, test_indices=test, train_only=False)
+	train_labels_dir, test_labels_dir = data_manager.prepare_data(train_csv=temp_train_csv_file, test_csv=temp_test_csv_file)
 
 
 	# Step 1b: Preparing Data - Transform Data #########################################################
+
 
 	# Compute Normalization score
 	if os.path.isfile(preprocessed_norm_mean_file) and os.path.isfile(preprocessed_norm_std_file):
@@ -146,13 +149,15 @@ def main():
 		std = np.load(preprocessed_norm_std_file)
 	else:
 		# If not, run the normalization and save the mean/std
-		print('DATA NORMALIZATION : ACCUMULATING THE DATA')
+		#print('DATA NORMALIZATION : ACCUMULATING THE DATA')
+		loghub.logMsg(msg="{}: DATA NORMALIZATION : ACCUMULATING THE DATA".format(__name__), otherlogs=["test_acc"])
 		# load the datase
 		dcase_dataset = DCASEDataset(train_labels_dir, root_dir, data_manager, True)
 		mean, std = NormalizeData(train_labels_dir, root_dir, dcase_dataset)
 		np.save(preprocessed_norm_mean_file, mean)
 		np.save(preprocessed_norm_std_file, std)
-		print('DATA NORMALIZATION COMPLETED')
+		#print('DATA NORMALIZATION COMPLETED')
+		loghub.logMsg(msg="{}: DATA NORMALIZATION COMPLETED".format(__name__), otherlogs=["test_acc"])
 
 	# Convert to Torch Tensors
 	mean = torch.from_numpy(mean)
@@ -201,17 +206,20 @@ def main():
 	# Step 3: Train Model ###############################################################
 
 
-	print('MODEL TRAINING START')
+	#print('MODEL TRAINING START')
+	loghub.logMsg(msg="{}: MODEL TRAINING START.".format(__name__), otherlogs=["test_acc"])
 	# train the model
 	for epoch in range(1, args.epochs + 1):
 		cnn.train(args, model, device, train_loader, optimizer, epoch)
 		cnn.test(args, model, device, train_loader, 'Training Data')		
 		cnn.test(args, model, device, test_loader, 'Test Data')			
 
-	print('MODEL TRAINING END')
+	#print('MODEL TRAINING END')
+	loghub.logMsg(msg="{}: MODEL TRAINING END.".format(__name__), otherlogs=["test_acc"])
 
 
 	# Step 4: Save Model ################################################################
+
 
 	# save the model
 	if (args.save_model):
@@ -223,5 +231,8 @@ def main():
 
 		
 if __name__ == '__main__':
+	loghub.init_main_logger(os.path.join("log", log_file))
+	loghub.setup_logger("test_acc", os.path.join("log", log_file))
+
 	# create a separate main function because original main function is too mainstream
 	main()

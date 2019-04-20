@@ -53,14 +53,14 @@ class BaselineASC(nn.Module):
 		super(BaselineASC, self).__init__()
 
 		# first conv layer, extracts 32 feature maps from 1 channel input
-		self.conv1 = nn.Conv2d(in_channels=in_channel, out_channels=32, kernel_size=7, stride=1, padding=3)
+		self.conv1 = nn.Conv2d(in_channels=in_channel, out_channels=32, kernel_size=11, stride=1, padding=5)
 		# batch normalization layer
 		self.conv1_bn = nn.BatchNorm2d(32)
 		# max pooling of 5x5
 		self.mp1 = nn.MaxPool2d((5,5))
 		# dropout layer, for regularization of the model (efficient learning)
 		self.drop1 = nn.Dropout(0.3)
-		self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=7, stride=1, padding=3)
+		self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2)
 		self.conv2_bn = nn.BatchNorm2d(64)
 		self.mp2 = nn.MaxPool2d((4,100))
 		self.drop2 = nn.Dropout(0.3)
@@ -142,9 +142,9 @@ def train(args, model, device, train_loader, optimizer, epoch):
 			#print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
 			#	epoch, batch_idx * len(data), len(train_loader.dataset),
 			#	100. * batch_idx / len(train_loader), loss.item()))
-			loghub.logMsg(name=__name__, msg="Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-				epoch, batch_idx * len(data), len(train_loader.dataset),
-				100. * batch_idx / len(train_loader), loss.item()), level="info")
+			loghub.logMsg(msg="{}: Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+				__name__, epoch, batch_idx * len(data), len(train_loader.dataset), 
+				100. * batch_idx / len(train_loader), loss.item()), otherlogs=["test_acc"])
 
 def test(args, model, device, test_loader, data_type):
 
@@ -156,7 +156,7 @@ def test(args, model, device, test_loader, data_type):
 	correct = 0
 	pred_results = np.asarray([])
 	#print('Testing..')
-	loghub.logMsg(name=__name__, msg="Testing...", otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Testing...".format(__name__), otherlogs=["test_acc"])
 
 	# Use no gradient backpropagations (as we are just testing)
 	with torch.no_grad():
@@ -193,11 +193,45 @@ def test(args, model, device, test_loader, data_type):
 	#print('Model prediction on ' + data_type + ': Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
 	#	test_loss, correct, len(test_loader.dataset),
 	#	100. * correct / len(test_loader.dataset)))
-	loghub.logMsg(name=__name__, msg="Model prediction on {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-		data_type, test_loss, correct, len(test_loader.dataset),
-		100. * correct / len(test_loader.dataset)), otherfile="test_acc", level="info")
+	loghub.logMsg(msg="{}: Model prediction on {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+		__name__, data_type, test_loss, correct, len(test_loader.dataset),
+		100. * correct / len(test_loader.dataset)), otherlogs=["test_acc"])
 
 	return pred_results
+
+def predict(model, device, test_loader):
+
+	# evaluate the model
+	model.eval()
+
+	pred_results = np.asarray([])
+	#test_pred = torch.LongTensor()
+	#print('Testing..')
+	loghub.logMsg(msg="{}: Predicting...".format(__name__), otherlogs=["test_acc"])
+
+	# Use no gradient backpropagations (as we are just testing)
+	with torch.no_grad():
+		# for every testing batch
+		for i_batch, sample_batched in enumerate(test_loader):
+			# for every batch, extract data (16, 1, 40, 500) and label (16, 1)
+			data, invalid_label = sample_batched
+
+			# Map the variables to the current device (CPU or GPU)
+			data = data.to(device, dtype=torch.float)
+
+			# get the predictions
+			output = model(data)
+
+			# get the predictions
+			pred = output.argmax(dim=1, keepdim=True)
+
+			# collate the predicted results
+			pred = np.squeeze(pred.cpu().numpy())
+			pred_results = np.concatenate((pred_results, pred))
+			#test_pred = torch.cat((test_pred, pred), dim=0)
+			
+	return pred_results
+
 
 
 

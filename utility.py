@@ -2,6 +2,7 @@
 Utility functions / Classes 
 """
 
+import csv
 import datetime
 import time
 
@@ -45,6 +46,20 @@ def compare_list_elements(listA, listB):
 
 	return correct, total
 
+def write_to_csv_file(data, filename, header=None):
+	"""
+		Write data to csv file
+
+		header (list of string): Eg. header = ["Date", "temperature 1", "Temperature 2"]
+	"""
+	with open(filename, 'w') as csvFile:
+		writer = csv.writer(csvFile)
+
+		if header != None:
+			writer.writerow(header)
+
+		writer.writerows(data)
+	csvFile.close()
 
 '''
 ////////////////////////////////////////////////////////////////////////////////////
