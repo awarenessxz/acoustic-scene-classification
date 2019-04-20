@@ -231,8 +231,8 @@ def main():
 
 		
 if __name__ == '__main__':
-	loghub.init_main_logger(os.path.join("log", log_file))
-	loghub.setup_logger("test_acc", os.path.join("log", log_file))
+	loghub.init_main_logger(os.path.join("log_files", log_file))
+	loghub.setup_logger("test_acc", os.path.join("log_files", log_file))
 
 	# create a separate main function because original main function is too mainstream
 	main()
