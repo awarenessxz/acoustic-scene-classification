@@ -295,12 +295,17 @@ We create a website for our bonus section. The front end is written with html, t
 
 Ensure that you have installed portaudio (refer to environment settings):
 
-To run the code: `app.py`. 
+- To run the code: `app.py`. 
 
-Go to http://127.0.0.1/5000
+- Go to http://127.0.0.1/5000
 
 ### Website Designe
+
 We mainly have two functions here. One is choose local audio file and predict. The other is record environment sound and predict. 
+
+<p align = "center">
+	<img src="web.png" width="600">
+</p>
 
 Here is the procedure about the website:
 
