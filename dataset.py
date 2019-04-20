@@ -2,7 +2,6 @@
 Handles anything related to the DCASE dataset
 """
 
-import csv
 import os
 import numpy as np
 
@@ -13,6 +12,8 @@ import librosa
 
 # import our own tools
 import audiopro as ap
+import loghub
+import utility as util
 
 class DatasetManager():
 	"""
@@ -62,38 +63,50 @@ class DatasetManager():
 	def get_test_data_size(self):
 		return len(self.test_data_list)
 
-	def load_all_data(self):
+	def load_all_data(self, include_test=False, with_labels=True):
 		"""
 			load all data, extract the features and save as filename
 		"""
 
 		# Read the training & testing data from the csv file
-		print("Loading all data...")
+		#print("Loading all data...")
+		loghub.logMsg(msg="{}: Loading all data...".format(__name__), otherlogs=["test_acc"])
 		self.train_data_list, self.train_label_list, self.train_label_indices = self.__read_DCASE_csv_file(self.train_csv_filepath, "train")
-		self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "test")
+		if with_labels:
+			self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "test")
+		else:
+			self.test_data_list, self.test_label_list, self.test_label_indices = self.__read_DCASE_csv_file(self.test_csv_filepath, "evaluate")
 		self.audio_files = self.train_data_list + self.test_data_list
 		self.audio_labels = self.train_label_list + self.test_label_list
 		self.audio_label_indices = self.train_label_indices + self.test_label_indices
 		self.data_type = [0] * len(self.train_data_list) + [1] * len(self.test_data_list)
 
+		self.base = len(self.train_data_list)
+		if include_test:
+			self.train_data_list = self.train_data_list + self.test_data_list
+			self.train_label_list = self.train_label_list + self.test_label_list
+			self.train_label_indices = self.train_label_indices + self.test_label_indices
+
 		self.data_type = np.asarray(self.data_type)
-		print("All data loaded.")	
+		#print("All data loaded.")	
+		loghub.logMsg(msg="{}: All data loaded.".format(__name__), otherlogs=["test_acc"])
 
 	def load_feature(self, feature_index, filename):
 		"""
 			filename (string): name of the file to save the extracted features eg feature.npy
 			feature_index (int): index to indicate which feature to extract
-
-			Load or Extract the features for all audio files. 
+			Load or Extract the features for all audio files.
 		"""
 
 		# check that data have been loaded
 		if not self.audio_files:
-			print("Data have not been loaded. Running data_manager.load_all_data()...")
+			#print("Data have not been loaded. Running data_manager.load_all_data()...")
+			loghub.logMsg(msg="{}: Data have not been loaded. Running data_manager.load_all_data()...".format(__name__), otherlogs=["test_acc"], level="warning")
 			self.load_all_data()
 
 		# Extract features
-		print("Loading/Extracting feature %i from audio files..." % feature_index)
+		#print("Loading/Extracting feature %i from audio files..." % feature_index)
+		loghub.logMsg(msg="{}: Loading/Extracting feature {} from audio files...".format(__name__, feature_index), otherlogs=["test_acc"])
 
 		if os.path.isfile(filename):
 			# file already exists
@@ -102,27 +115,130 @@ class DatasetManager():
 			# file does not exists (extract spectrogram of feature and save the data)
 			mel_specs = []
 
+			specA = specB = None
+
+			# Load preprocessed data if exists
+			if feature_index == 3:
+				if os.path.isfile("processed_data/left_spec.npy") and os.path.isfile("processed_data/right_spec.npy"):
+					specA = np.load("processed_data/left_spec.npy")
+					specB = np.load("processed_data/right_spec.npy")
+			elif feature_index == 6:
+				if os.path.isfile("processed_data/LR_spec.npy") and os.path.isfile("processed_data/diff_spec.npy"):
+					specA = np.load("processed_data/LR_spec.npy")
+					specB = np.load("processed_data/diff_spec.npy")
+			elif feature_index == 8:
+				if os.path.isfile("processed_data/hpss_spec.npy") and os.path.isfile("processed_data/mono_spec.npy"):
+					specA = np.load("processed_data/hpss_spec.npy")
+					specB = np.load("processed_data/mono_spec.npy")
+			elif feature_index == 15:
+				if os.path.isfile("processed_data/mfcc_left_spec.npy") and os.path.isfile("processed_data/mfcc_right_spec.npy"):
+					specA = np.load("processed_data/mfcc_left_spec.npy")
+					specB = np.load("processed_data/mfcc_right_spec.npy")
+			elif feature_index == 16:
+				if os.path.isfile("processed_data/mfcc_LR_spec.npy") and os.path.isfile("processed_data/mfcc_diff_spec.npy"):
+					specA = np.load("processed_data/mfcc_LR_spec.npy")
+					specB = np.load("processed_data/mfcc_diff_spec.npy")
+			elif feature_index == 17:
+				if os.path.isfile("processed_data/hpssmono_spec.npy") and os.path.isfile("processed_data/LR_spec.npy"):
+					specA = np.load("processed_data/hpssmono_spec.npy")
+					specB = np.load("processed_data/LR_spec.npy")
+			elif feature_index == 18:
+				if os.path.isfile("processed_data/mono_spec.npy") and os.path.isfile("processed_data/LRD_spec.npy"):
+					specA = np.load("processed_data/mono_spec.npy")
+					specB = np.load("processed_data/LRD_spec.npy")
+			elif feature_index == 19:
+				if os.path.isfile("processed_data/mfcc_mono_spec.npy") and os.path.isfile("processed_data/mfcc_LRD_spec.npy"):
+					specA = np.load("processed_data/mfcc_mono_spec.npy")
+					specB = np.load("processed_data/mfcc_LRD_spec.npy")
+
+			# Extract features from audio file
 			for i in range(len(self.audio_files)):
 				wav_name = os.path.join(self.root_dir, self.audio_files[i])
 
 				if feature_index == 0:
+					# Extracting Mel Spectrogram for Mono Channel (1 channel)
 					mel_specs.append(ap.extract_mel_spectrogram_for_mono_channel(wav_name))
 				elif feature_index == 1:
+					# Extracting Mel Spectrogram for Left Channel (1 channel)
 					mel_specs.append(ap.extract_mel_spectrogram_for_left_channel(wav_name))
 				elif feature_index == 2:
+					# Extracting Mel Spectrogram for Right Channel (1 channel)
 					mel_specs.append(ap.extract_mel_spectrogram_for_right_channel(wav_name))
 				elif feature_index == 3:
-					mel_specs.append(ap.extract_mel_spectrogram_for_left_and_right_channel(wav_name))
+					# Extracting Mel Spectrogram for left & right Channel (2 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_left_and_right_mel_spectrogram(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_left_and_right_mel_spectrogram(wav_name))
 				elif feature_index == 4:
-					mel_specs.append(ap.extract_mel_spectrogram_for_hpss(wav_name))
+					# Extracting Mel Spectrogram for difference of left & right Channel (1 channel)
+					mel_specs.append(ap.extract_mel_spectrogram_for_difference_of_left_right_channel(wav_name))
 				elif feature_index == 5:
-					mel_specs.append(ap.extract_mel_spectrogram_for_3f(wav_name))
+					# Extracting Mel Spectrogram for sum of left & right Channel (1 channel)
+					mel_specs.append(ap.extract_mel_spectrogram_for_sum_of_left_right_channel(wav_name))
 				elif feature_index == 6:
-					mel_specs.append(ap.extract_mfcc_for_mono_channel(wav_name))
+					# Extracting Mel Spectrogram of left & right & leftrightdiff Channel (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_left_right_with_LRdifference(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_left_right_with_LRdifference(wav_name))
 				elif feature_index == 7:
-					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
+					# Extracting Mel Spectrogram of mono Channel with hpss applied (2 channel)
+					mel_specs.append(ap.extract_mel_spectrogram_for_hpss(wav_name))
 				elif feature_index == 8:
+					# Extracting Mel Spectrogram of mono Channel & hpss (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_hpss_and_mono_mel_spectrogram(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_hpss_and_mono_mel_spectrogram(wav_name))
+				elif feature_index == 9:
+					# Extracting Chroma feature (1 channel)
+					mel_specs.append(ap.extract_chroma_for_mono_channel(wav_name))
+				elif feature_index == 10:
+					# Extracting Zero Crossing feature (1 channel)
 					mel_specs.append(ap.extract_zero_crossing_for_mono_channel(wav_name))
+				elif feature_index == 11:
+					# Extracting MFCC feature from mono channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_for_mono_channel(wav_name))
+				elif feature_index == 12:
+					# Extracting MFCC feature from left channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_left_channel(wav_name))
+				elif feature_index == 13:
+					# Extracting MFCC feature from right channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_right_channel(wav_name))
+				elif feature_index == 14:
+					# Extracting MFCC feature from difference of left & right channel (1 channel)
+					mel_specs.append(ap.extract_mfcc_spectrogram_for_difference_of_left_right_channel(wav_name))
+				elif feature_index == 15:
+					# Extracting MFCC feature from left & right & leftrightdiff channel (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_mfcc_left_and_right(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_mfcc_left_and_right(wav_name))
+				elif feature_index == 16:
+					# Extracting MFCC feature from left & right & leftrightdiff channel (3 channel)
+					if specA != None and specB != None:
+						mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.combine_mfcc_left_right_with_LRdifference(wav_name))
+				elif feature_index == 17:
+					# Combine left mel + right mel + hpss + mono mel
+					if specA != None and specB != None:
+						mel_specs.append(ap.extract_early_fusion_left_right_3f(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.extract_early_fusion_left_right_3f(wav_name))
+				elif feature_index == 18:
+					# Combine left mel + right mel + diff mel + mono mel
+					if specA != None and specB != None:
+						mel_specs.append(ap.extract_early_fusion_left_right_diff_mono(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.extract_early_fusion_left_right_diff_mono(wav_name))
+				elif feature_index == 19:
+					# Combine left mfcc + right mfcc + diff mfcc + mono mfcc
+					if specA != None and specB != None:
+						mel_specs.append(ap.extract_early_fusion_MFCC_left_right_diff_mono(wav_name, specA[i], specB[i]))
+					else:
+						mel_specs.append(ap.extract_early_fusion_MFCC_left_right_diff_mono(wav_name))
 
 			if filename:
 				np.save(filename, mel_specs)
@@ -130,26 +246,26 @@ class DatasetManager():
 			mel_specs = np.asarray(mel_specs)
 			self.audio_data = mel_specs
 
-		print("Feature %i extracted." % feature_index)
+		#print("Feature %i extracted." % feature_index)
+		loghub.logMsg(msg="{}: Feature {} extracted.".format(__name__, feature_index), otherlogs=["test_acc"])
 
 	def apply_k_fold(self, K=5):
 		"""
 			K (int): K folds
-
 			Split train data into K folds and returns an array of an array of indices
 				- Fold #1 (train_indices, test_indices)
 				- ....
 				- Fold #K (train_indices, test_indices)
 		"""
-		
 		# check that data have been loaded
 		if not self.train_data_list:
-			print("Data have not been loaded. Running data_manager.load_all_data()...")
+			#print("Data have not been loaded. Running data_manager.load_all_data()...")
+			loghub.logMsg(msg="{}: Data have not been loaded. Running data_manager.load_all_data()...".format(__name__), otherlogs=["test_acc"], level="warning")
 			self.load_all_data()
 
 		# Initialize array
 		kfolds_arr = []
-		for j in range(K):
+		for i in range(K):
 			kfolds_arr.append([])			# axis 0 = folds
 
 		# K FOLDS
@@ -173,7 +289,7 @@ class DatasetManager():
 			for j in range(K):
 				if i == j:
 					continue
-				train_indices += kfolds_arr[i]
+				train_indices += kfolds_arr[j]
 
 			kfolds.append((train_indices, test_indices))
 
@@ -194,9 +310,32 @@ class DatasetManager():
 			# Get dataset
 			dataset = []
 			dataset.append(self.test_data_list[i])
-			dataset.append(self.test_label_list[i])
-			dataset.append(self.test_label_indices[i])
 			test_csv_data.append(dataset)
+
+		# Write into test csv file
+		util.write_to_csv_file(test_csv_data, test_filepath)
+
+		#print("Test Data Labels generated in %s (test)" % test_filepath)
+		loghub.logMsg(msg="{}: Test Data Labels generated in {} (test)".format(__name__, test_filepath), otherlogs=["test_acc"])
+
+		return test_filepath
+
+	def prepare_single_data(self, filename, label, labelidx, test_csv="test_dataset.csv"):
+		"""
+			This is used when testing model. Instead of preparing both train/test csv in prepare_data().
+			This function only prepares the test.csv
+		"""
+
+		# Prepare csv file path
+		test_filepath = os.path.join(self.root_dir, test_csv)
+
+		# Extract data for test.csv
+		test_csv_data = []
+		dataset = []
+		dataset.append(filename)
+		dataset.append(label)
+		dataset.append(labelidx)
+		test_csv_data.append(dataset)
 
 		# Write into test csv file
 		with open(test_filepath, 'w') as csvFile:
@@ -208,26 +347,30 @@ class DatasetManager():
 
 		return test_filepath
 
-
-	def prepare_data(self, train_indices, test_indices, train_only, train_csv="train_dataset.csv", test_csv="test_dataset.csv"):
+	def prepare_data(self, train_indices=None, test_indices=None, train_only=False, train_csv="train_dataset.csv", test_csv="test_dataset.csv"):
 		"""
 			train_indices (array of index): indices of all training audio files
 			test_indices (array of index): indicies of all testing audio files
 			train_only (bool): indicator on whether train_indices and test_indices are all from training data
 			train_csv (string): filename of newly generated train dataset
 			test_csv (string): filename of newly generated test dataset
-
-			Prepare data for training/testing model. As we loaded all the features and store them into a 
-			single data file, this function is to generate a train.csv and test.csv which will be used 
-			to build the model. The index of audio files in train.csv/test.csv will be map to the index 
-			of the main data file. Purpose is to improve efficiency by not recomputing/extracting all 
+			Prepare data for training/testing model. As we loaded all the features and store them into a
+			single data file, this function is to generate a train.csv and test.csv which will be used
+			to build the model. The index of audio files in train.csv/test.csv will be map to the index
+			of the main data file. Purpose is to improve efficiency by not recomputing/extracting all
 			the features in the audio files whenever the train/test data changes
 		"""
 
-		print("Generating train.csv and test.csv for building model...")
+		#print("Generating train.csv and test.csv for building model...")
+		loghub.logMsg(msg="{}: Generating train.csv and test.csv for building model...".format(__name__), otherlogs=["test_acc"])
 
 		self.train_idx_map = []
 		self.test_idx_map = []
+
+		if train_indices == None and test_indices == None:
+			# using the original indices order
+			train_indices = np.arange(self.get_train_data_size())	# Train indices = all of train data
+			test_indices = np.arange(self.get_test_data_size())		# Test indices = all of test data
 
 		# Extract data for train.csv
 		train_csv_data = []
@@ -245,7 +388,7 @@ class DatasetManager():
 
 		# Extract data for test.csv
 		test_csv_data = []
-		base = self.get_train_data_size()			# main data = train + test (hence index of test starts after train)
+		base = self.base						# main data = train + test (hence index of test starts after train)
 		for i in range(len(test_indices)):
 			# get index
 			index = test_indices[i]
@@ -276,18 +419,13 @@ class DatasetManager():
 		test_filepath = os.path.join(self.root_dir, test_csv)
 
 		# Write into train csv file
-		with open(train_filepath, 'w') as csvFile:
-			writer = csv.writer(csvFile)
-			writer.writerows(train_csv_data)
-		csvFile.close()
+		util.write_to_csv_file(train_csv_data, train_filepath)
 
 		# Write into test csv file
-		with open(test_filepath, 'w') as csvFile:
-			writer = csv.writer(csvFile)
-			writer.writerows(test_csv_data)
-		csvFile.close()
+		util.write_to_csv_file(test_csv_data, test_filepath)
 
-		print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
+		#print("Data labels generated in %s (train) and %s (test)" % (train_filepath, test_filepath))
+		loghub.logMsg(msg="{}: Data labels generated in {} (train) and {} (test)".format(__name__, train_filepath, test_filepath), otherlogs=["test_acc"])
 
 		return train_filepath, test_filepath
 
@@ -305,17 +443,12 @@ class DatasetManager():
 		else:
 			# Mapping is not empty
 			if data_type == "train":
-				if idx >= len(self.train_idx_map):
-					print("Index out of size: %i" % idx)
-
 				return self.train_idx_map[idx]
 			elif data_type == "test":
-				if idx >= len(self.test_idx_map):
-					print("Index out of size: %i" % idx)
-
 				return self.test_idx_map[idx]
 			else:
-				print("Error! Invalid data type")
+				#print("Error! Invalid data type")
+				loghub.logMsg(msg="{}: Error! Invalid data type".format(__name__), otherlogs=["test_acc"], level="error")
 				return
 
 	def split_into_classes(self):
@@ -323,13 +456,12 @@ class DatasetManager():
 			Split the data into the different labels
 		"""
 
-		data_list = [[],[],[],[],[],[],[],[],[],[]]	
-		label_list = [[],[],[],[],[],[],[],[],[],[]]
-		label_indices = [[],[],[],[],[],[],[],[],[],[]]	
+		data_list = [[], [], [], [], [], [], [], [], [], []]
+		label_list = [[], [], [], [], [], [], [], [], [], []]
+		label_indices = [[], [], [], [], [], [], [], [], [], []]
 
 		for i in range(len(self.audio_label_indices)):
-			class_index = self.audio_label_indices[i]
-
+			class_index = int(self.audio_label_indices[i])
 			data_list[class_index].append(self.audio_files[i])
 			label_list[class_index].append(self.audio_labels[i])
 			label_indices[class_index].append(self.audio_label_indices[i])
@@ -379,8 +511,9 @@ class DatasetManager():
 					self.available_data_size += 1
 					# store the data
 					data_list.append(datapath)	
-					label_list.append(x_row[1])			# second column: labels
-					label_indices.append(x_row[2])		# third column: label indices (not used in this code)
+					if len(x_row) > 1:
+						label_list.append(x_row[1])			# second column: labels
+						label_indices.append(x_row[2])		# third column: label indices (not used in this code)
 
 		f.close()
 
@@ -395,7 +528,7 @@ class DCASEDataset(Dataset):
 			csv_file (string): Path to the csv file with annotations.
 			root_dir (string): Directory with all the audio.
 			data_manager (DataManager): class that contains all loaded dataset
-			is_train_data (bool): Indicator if data is trian or test
+			is_train_data (bool): Indicator if data is train or test
 			transform (callable, optional): Optional transform to be applied
 				on a sample.
 		"""	
@@ -412,8 +545,9 @@ class DCASEDataset(Dataset):
 
 				row = line.split(',')
 				data_list.append(row[0]) # first column in the csv, file names
-				label_list.append(row[1]) # second column, the labels
-				label_indices.append(row[2]) # third column, the label indices (not used in this code)
+				if len(row) > 1:
+					label_list.append(row[1]) # second column, the labels
+					label_indices.append(row[2]) # third column, the label indices (not used in this code)
 
 		self.root_dir = root_dir
 		self.transform = transform
@@ -437,21 +571,20 @@ class DCASEDataset(Dataset):
 		# Extract input feature
 		input_feat = self.data_manager.audio_data[ad_index]
 
-		# extract the label
-		label = np.asarray(self.default_labels.index(self.labels[idx]))
+		# Check if there is labels (evaluation data set has no labels)
+		if len(self.labels) > 0:
+			# extract the label
+			label = np.asarray(self.default_labels.index(self.labels[idx]))
 
-		# final sample
-		sample = (input_feat, label)
+			# final sample
+			sample = (input_feat, label)
+		else:
+			# final sample
+			sample = (input_feat, np.asarray(-1))		# no labels
 
 		# perform the transformation (normalization etc.), if required
 		if self.transform:
 			sample = self.transform(sample)
 
 		return sample
-
-
-
-
-
-
 

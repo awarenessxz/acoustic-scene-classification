@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html >
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="shortcut icon" href="static/favicon.ico">
+      <title>Music - Beta5</title>
+      <style>
+         /* NOTE: The styles were added inline because Prefixfree needs access to your styles and they must be inlined if they are on local disk! */
+         .cf:before, .cf:after{
+         content:"";
+         display:table;
+         }
+         .cf:after{
+         clear:both;
+         }
+         .cf{
+         zoom:1;
+         }
+         /* Form wrapper styling */
+         .search-wrapper {
+         width: 220px;
+         margin: 170px auto 50px auto;
+         box-shadow: 0 1px 1px rgba(0, 0, 0, .4) inset, 0 1px 0 rgba(255, 255, 255, .2);
+         }
+         /* Form text input */
+         .search-wrapper input {
+         width: 138px;
+         height: 20px;
+         padding: 10px 5px;
+         float: left;
+         font: bold 15px 'lucida sans', 'trebuchet MS', 'Tahoma';
+         border: 0;
+         background: #EEE;
+         border-radius: 3px 0 0 3px;
+         }
+         .search-wrapper input:focus {
+         outline: 0;
+         background: #fff;
+         box-shadow: 0 0 2px rgba(0,0,0,.8) inset;
+         }
+         .search-wrapper input::-webkit-input-placeholder {
+         color: #999;
+         font-weight: normal;
+         font-style: italic;
+         }
+         .search-wrapper input:-moz-placeholder {
+         color: #999;
+         font-weight: normal;
+         font-style: italic;
+         }
+         .search-wrapper input:-ms-input-placeholder {
+         color: #999;
+         font-weight: normal;
+         font-style: italic;
+         }
+         /* Form submit button */
+         .search-wrapper button {
+         overflow: visible;
+         position: relative;
+         float: right;
+         border: 0;
+         padding: 0;
+         cursor: pointer;
+         height: 40px;
+         width: 72px;
+         font: bold 15px/40px 'lucida sans', 'trebuchet MS', 'Tahoma';
+         color: white;
+         text-transform: uppercase;
+         background: #D83C3C;
+         border-radius: 0 3px 3px 0;
+         text-shadow: 0 -1px 0 rgba(0, 0, 0, .3);
+         }
+         .search-wrapper button:hover{
+         background: #e54040;
+         }
+         .search-wrapper button:active,
+         .search-wrapper button:focus{
+         background: #c42f2f;
+         outline: 0;
+         }
+         .search-wrapper button:before { /* left arrow */
+         content: '';
+         position: absolute;
+         border-width: 8px 8px 8px 0;
+         border-style: solid solid solid none;
+         border-color: transparent #d83c3c transparent;
+         top: 12px;
+         left: -6px;
+         }
+         .search-wrapper button:hover:before{
+         border-right-color: #e54040;
+         }
+         .search-wrapper button:focus:before,
+         .search-wrapper button:active:before{
+         border-right-color: #c42f2f;
+         }
+         .search-wrapper button::-moz-focus-inner { /* remove extra button spacing for Mozilla Firefox */
+         border: 0;
+         padding: 0;
+         }
+      </style>
+     <script src="http://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script>
+    function test(){
+      var music = document.getElementById("music");
+      var data={"name":music.src};
+      $.ajax({
+            url:"{{ url_for('s') }}",
+            type:"post",
+            data:JSON.stringify(data),
+            contentType: 'application/json; charset=UTF-8',
+            success:function(data){
+                    alert(data);
+                   // $(img_url_new).attr("src",data.img_url_new);
+                   // $(imgPic).attr("src",data.img_url_new);
+            },
+            error:function(e){
+                    alert("error");
+            }
+      });
+    }
+
+     function luyin(){
+      alert("Please wait for 10 seconds to record sound after you click close!");
+      var re = document.getElementById("re").value;
+      var data={"name":re};
+      $.ajax({
+            url:"{{ url_for('r') }}",
+            type:"post",
+            data:JSON.stringify(data),
+            contentType: 'application/json; charset=UTF-8',
+            success:function(data){
+                   document.getElementById("music").src = "static/"+re+".wav";
+                   document.getElementById('audio').load();
+                   alert(data);
+            },
+            error:function(e){
+                    alert("error");
+            }
+      });
+    }
+
+    function getSelectFile()
+        {
+          var fileName = document.getElementById("fileSelect").value;
+          var audio = document.getElementById('audio');
+          var music = document.getElementById("music");
+          var file = "";
+          for(var i=0;i<fileName.length;i++){
+            if(fileName[i] == '\\'){
+                file = ""
+            }
+            else{
+                file = file+fileName[i]
+            }
+          }
+          music.src = "static/"+file;
+          audio.load();
+        }
+  </script>
+   </head>
+    <body bgcolor="#5F9F9F">
+    <div>
+        <p style="text-align:center;font-size:60px;color:orange">
+            Acoustic Scene Classification
+        </p>
+    </div>
+    <div style="padding-left:5px">
+        <p style="text-align:center;font-size:20px;color:pink">
+            We will have 10 scenes and 10 labels:
+        </p>
+        <p style="text-align:center;font-size:20px;color:pink">
+            [0:airport, 1:bus, 2:metro, 3:metro_station, 4:park, 5:public_square, 6:shopping_mall, 7:street_pedestrian, 8:street_traffic, 9:tram]
+        </p>
+    </div>
+    <div style="padding:10px">
+      <center>
+         <input id="fileSelect" type="file" />
+          <input value="Get File" type="button" onclick="getSelectFile();"/>
+      </center>
+    </div>
+    <div style="padding:10px">
+       <center>
+          <audio id="audio" controls>
+	        <source  id="music" src="static/output.wav" type="audio/wav"/>
+	      Your browser does not support the audio tag.
+           </audio>
+
+      </center>
+    </div>
+    <div style="padding:10px">
+        <center>
+             <button id="test" type="button" onclick="test()">Guess scene of this audio!</button>
+        </center>
+    </div>
+    <div>
+         <center>
+         <input id="re" type="text" placeholder="Input record name." name=s>
+         <button type="button" onclick="luyin()">Record</button>
+         </center>
+    </div>
+   </body>
+</html>
